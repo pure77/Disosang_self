@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>홈</title>
+</head>
+<body>
+<h1 th:text="${message}">홈 페이지</h1>
+<p>포트폴리오용 간단 홈 화면입니다.</p>
+
+<a th:href="@{/stores}">가맹점 지도 보기</a>
+</body>
+</html>

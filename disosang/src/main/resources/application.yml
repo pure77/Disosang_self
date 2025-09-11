@@ -1,0 +1,105 @@
+# 공통 설정
+spring:
+  application:
+    name: disosang
+  profiles:
+    active: dev  # 기본 실행 프로필
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  server:
+    port: 8080
+    error:
+      include-message: always
+      include-stacktrace: always
+
+---
+
+# 테스트 환경 (CI, H2 DB 사용)
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # 테스트 시에는 DB 자동 생성/삭제
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    com.disosang: DEBUG
+
+---
+
+# 운영 환경 (Production, MySQL)
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none    # 운영에서는 자동으로 스키마 변경 ❌
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    root: INFO
+    com.disosang: INFO
+
+jwt:
+  secret-key: ${jwt.secret-key}   # 운영 환경에서는 외부 주입
+
+---
+
+# 개발 환경 (Local, MySQL)
+spring:
+  config:
+    activate:
+      on-profile: dev
+    import: optional:application-secret.yml  # 로컬 비밀 키 따로 관리
+
+  datasource:
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password:  ${spring.datasource.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # 개발 환경에서는 스키마 자동 업데이트
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  file:
+    encoding: UTF-8
+  level:
+    root: INFO               # 전체 기본 로그를 INFO로
+    org.springframework: WARN # Spring 프레임워크 관련은 WARN 이상만
+    org.hibernate.SQL: DEBUG  # SQL만 보고 싶으면 DEBUG
+    org.hibernate.type: TRACE # SQL 파라미터까지 보고 싶으면 TRACE
+    com.disosang: DEBUG       # 내가 만든 패키지만 DEBUG
