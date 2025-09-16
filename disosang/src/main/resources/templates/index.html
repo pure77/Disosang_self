@@ -8,6 +8,9 @@
 <h1 th:text="${message}">홈 페이지</h1>
 <p>포트폴리오용 간단 홈 화면입니다.</p>
 
-<a th:href="@{/stores}">가맹점 지도 보기</a>
+
+<!-- map.html로 이동하는 링크 추가 -->
+<a th:href="@{/store/map}">카카오맵 기반 가맹점 검색</a>
+
 </body>
 </html>

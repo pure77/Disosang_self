@@ -1,0 +1,192 @@
+/* 기본 스타일 */
+body { 
+    margin: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+}
+
+#map { 
+    width: calc(100% - 300px); 
+    height: 100vh; 
+    margin-left: 300px; 
+}
+
+/* 검색창 */
+.search-bar {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.search-bar input {
+    width: 250px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.search-bar button {
+    padding: 6px 10px;
+    border: none;
+    background: #4285f4;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.search-bar button:hover { background: #3367d6; }
+
+/* 왼쪽 사이드바 */
+.store-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 100vh;
+    overflow-y: auto;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    z-index: 5;
+}
+.store-list h3 {
+    margin: 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+.store-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+.store-item:hover { background: #f1f3f4; }
+
+/* 버튼들 */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+}
+.controls button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background: #4285f4;
+    color: #fff;
+    cursor: pointer;
+}
+.controls button:hover { background: #3367d6; }
+
+/* 페이지네이션 */
+.pagination {
+    padding: 10px;
+    text-align: center;
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+}
+.pagination button {
+    margin: 2px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+}
+.pagination button.active {
+    background: #4285f4;
+    color: white;
+    font-weight: bold;
+}
+
+/* 인포윈도우 */
+.infowindow-wrap {
+    padding: 12px;
+    width: 300px;
+    font-size: 13px;
+    position: relative;
+}
+.infowindow-wrap * { 
+    margin: 0; 
+    padding: 0; 
+}
+.close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #888;
+    cursor: pointer;
+      /* ▼▼▼ z-index 값을 아주 높게 설정해 최상단으로 올립니다 ▼▼▼ */
+        z-index: 99;
+}
+.close-btn:hover { 
+    color: #333; 
+}
+/* 수정 후 */
+.info-header {
+    position: relative; /* 자식 요소의 위치 기준으로 활용 */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    /* ▼▼▼ X 버튼이 위치할 공간을 확보하기 위해 헤더 전체에 오른쪽 패딩 추가 ▼▼▼ */
+    padding-right: 30px;
+}
+
+/* 수정 후 */
+.info-header .title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    /* ▼▼▼ 헤더 전체에 패딩을 주었으므로, 개별 패딩은 제거하거나 줄여도 됩니다 ▼▼▼ */
+    padding-right: 0;
+}
+
+.info-header .thumbnail {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+.info-body { padding: 10px 0; }
+.info-body .rating { color: #f0ad4e; margin-bottom: 4px; }
+.info-body .rating .star { font-size: 16px; }
+.info-body .rating .count { color: #888; margin-left: 5px; }
+.info-body p { color: #555; line-height: 1.5; margin-bottom: 4px; }
+.info-body .jibun { color: #888; font-size: 12px; }
+.info-links {
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+}
+.info-links a {
+    text-decoration: none;
+    color: #666;
+    margin-right: 8px;
+}
+.info-links a:hover { text-decoration: underline; }
+.info-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+.info-buttons a {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    border-right: 1px solid #eee;
+}
+.info-buttons a:last-child { border-right: none; }
+.info-buttons a:hover { background-color: #f0f0f0; }
