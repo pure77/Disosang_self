@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disosang에 오신 것을 환영합니다</title>
+    <link rel="stylesheet" href="/css/welcome.css">
+</head>
+<body>
+
+<div class="container">
+    <main class="content">
+        <div class="logo">📍</div>
+        <h1 class="app-title">Disosang</h1>
+        <p class="slogan">가장 가까운 가맹점을<br>지도에서 바로 찾아보세요</p>
+    </main>
+
+    <footer class="actions">
+        <a th:href="@{/user/login}" class="btn btn-primary">로그인</a>
+
+        <div class="signup-link">
+            아직 회원이 아니신가요? <a th:href="@{/user/signup}"><strong>회원가입</strong></a>
+        </div>
+    </footer>
+</div>
+
+</body>
+</html>

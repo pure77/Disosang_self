@@ -2,35 +2,57 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>가맹점 지도 검색</title>
-    <link rel="stylesheet" href="/store/map.css">
+    <link rel="stylesheet" href="/css/map.css">
     <script type="text/javascript"
             th:src="'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoKey} + '&libraries=services'"></script>
-
 </head>
 <body>
-<div class="search-bar">
-    <form id="searchForm">
-        <input type="text" id="keyword" placeholder="검색어 입력" required>
-        <button type="submit">검색</button>
-    </form>
+
+<div class="container">
+    <div id="map"></div>
+
+    <div class="search-container">
+        <div class="search-bar">
+            <form id="searchForm">
+                <input type="text" id="keyword" placeholder="장소, 주소 검색" required>
+                <button type="submit">🔍</button>
+            </form>
+        </div>
+
+        <div class="controls">
+            <button id="locBtn">📍</button>
+            <button onclick="searchCategory('카페')">☕ 카페</button>
+            <button onclick="searchCategory('음식점')">🍽️ 음식점</button>
+            <button onclick="searchCategory('편의점')">🏪 편의점</button>
+        </div>
+    </div>
+
+    <div class="result-sidebar">
+        <h3>검색 결과</h3>
+        <div id="storeList" class="store-list-content">
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
 </div>
 
-<div id="map"></div>
+<nav class="bottom-nav">
+    <a th:href="@{/home/home}" class="nav-item">
+        <span class="icon">🏠</span>
+        <span class="label">홈</span>
+    </a>
+    <a th:href="@{/store/map}" class="nav-item active">
+        <span class="icon">🗺️</span>
+        <span class="label">지도</span>
+    </a>
+    <a th:href="@{/user/userInfo}" class="nav-item">
+        <span class="icon">👤</span>
+        <span class="label">내 정보</span>
+    </a>
+</nav>
 
-<div class="store-list">
-    <h3>검색 결과</h3>
-    <div id="storeList"></div>
-    <div class="pagination" id="pagination"></div>
-</div>
+<script src="/js/map.js"></script>
 
-<div class="controls">
-    <button id="locBtn">📍 현재 위치</button>
-    <button onclick="searchCategory('카페')">☕ 카페</button>
-    <button onclick="searchCategory('음식점')">🍽 음식점</button>
-    <button onclick="searchCategory('편의점')">🏪 편의점</button>
-</div>
-
-<script src="/store/map.js"></script>
 </body>
 </html>

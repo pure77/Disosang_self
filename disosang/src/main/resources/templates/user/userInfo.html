@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 정보</title>
+    <link rel="stylesheet" href="/css/userInfo.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>내 정보</h1>
+    </header>
+
+    <main>
+        <section class="card profile-card">
+            <div class="avatar">👤</div>
+            <div class="user-info">
+                <div class="user-name">김아무개</div>
+                <div class="user-email">gemini-user@example.com</div>
+            </div>
+            <a href="#" class="edit-btn">프로필 수정</a>
+        </section>
+
+        <section class="card menu-card">
+            <a href="#" class="menu-item">
+                <span>🔔 공지사항</span>
+                <span>></span>
+            </a>
+            <a href="#" class="menu-item">
+                <span>📞 고객센터/문의하기</span>
+                <span>></span>
+            </a>
+            <a href="#" class="menu-item">
+                <span>📄 이용약관</span>
+                <span>></span>
+            </a>
+            <a href="#" class="menu-item">
+                <span>🔒 개인정보 처리방침</span>
+                <span>></span>
+            </a>
+        </section>
+
+        <section class="card menu-card">
+            <a href="#" class="menu-item">
+                <span>⚙️ 앱 설정</span>
+                <span>></span>
+            </a>
+            <a href="#" class="menu-item">
+                <span>⭐ 앱 평가하기</span>
+                <span>></span>
+            </a>
+            <a href="#" class="menu-item">
+                <span>버전 정보</span>
+                <span class="version">v1.0.0</span>
+            </a>
+        </section>
+
+        <section class="card action-card">
+            <a href="#" class="logout-btn">로그아웃</a>
+        </section>
+    </main>
+</div>
+
+<nav class="bottom-nav">
+    <a th:href="@{/home/home}" class="nav-item">
+        <span class="icon">🏠</span>
+        <span class="label">홈</span>
+    </a>
+    <a th:href="@{/store/map}" class="nav-item">
+        <span class="icon">🗺️</span>
+        <span class="label">지도</span>
+    </a>
+    <a th:href="@{/user/userInfo}" class="nav-item active"> <span class="icon">👤</span>
+        <span class="label">내 정보</span>
+    </a>
+</nav>
+
+</body>
+</html>

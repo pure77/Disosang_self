@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입</title>
+  <link rel="stylesheet" href="/css/signup.css">
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <a th:href="@{/}" class="back-btn">&lt;</a>
+    <h1>회원가입</h1>
+  </header>
+
+  <main>
+    <section class="social-signup">
+      <a href="#" class="btn btn-social btn-kakao">
+        <span class="social-icon">K</span> 카카오로 시작하기
+      </a>
+      <a href="#" class="btn btn-social btn-naver">
+        <span class="social-icon">N</span> 네이버로 시작하기
+      </a>
+    </section>
+
+    <div class="divider">
+      <span>또는</span>
+    </div>
+
+    <form th:action="@{/user/signup}" method="post">
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" name="name" placeholder="이름을 입력하세요" required>
+      </div>
+      <div class="form-group">
+        <label for="email">이메일</label>
+        <input type="email" id="email" name="email" placeholder="이메일 주소를 입력하세요" required>
+        <div id="email-message" class="password-message"></div>
+      </div>
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+        <small class="form-text">영문, 숫자를 포함해 8자 이상이어야 합니다.</small>
+      </div>
+      <div class="form-group">
+        <label for="password-confirm">비밀번호 확인</label>
+        <input type="password" id="password-confirm" name="passwordConfirm" placeholder="비밀번호를 다시 입력하세요" required>
+
+        <div id="password-message" class="password-message"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">가입하기</button>
+    </form>
+    <div th:if="${errorMessage}" class="error-message">
+      <p th:text="${errorMessage}"></p>
+    </div>
+    <p class="terms">
+      가입 시 <a href="#">이용약관</a> 및 <a href="#">개인정보 처리방침</a>에 동의하게 됩니다.
+    </p>
+  </main>
+</div>
+<script src="/js/signup.js"></script>
+
+</body>
+</html>
