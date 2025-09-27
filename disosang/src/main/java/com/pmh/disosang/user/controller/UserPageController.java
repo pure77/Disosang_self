@@ -9,12 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/user")
 public class UserPageController {
 
-    @GetMapping("/userInfo")
-    public String userInfoPage(Model model) {
-        model.addAttribute("message", "내 정보 페이지");
-        return "user/userInfo";
-
-    }
     // 회원가입 페이지를 보여주는 GET 요청
     @GetMapping("/signup")
     public String signupPage() {

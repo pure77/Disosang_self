@@ -1,9 +1,12 @@
 package com.pmh.disosang.user.controller;
 
 import com.pmh.disosang.user.dto.request.UserSignupRequest;
+import com.pmh.disosang.user.entity.User;
 import com.pmh.disosang.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +19,7 @@ import java.util.Map;
 @RequestMapping("/user")
 public class UserController {
 
-    private  final UserService userService;
+    private final UserService userService;
 
     @PostMapping("/signup")
     public String signup(UserSignupRequest signupRequest, RedirectAttributes redirectAttributes) {
@@ -31,4 +34,14 @@ public class UserController {
         return "redirect:/login";
     }
 
+    @GetMapping("/userInfo")
+    public String userInfo(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+
+        User user = userService.findByEmailUserInfo(email);
+
+        model.addAttribute("user", user);
+
+        return "user/userInfo";
+    }
 }

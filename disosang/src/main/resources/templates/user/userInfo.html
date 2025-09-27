@@ -17,8 +17,8 @@
         <section class="card profile-card">
             <div class="avatar">👤</div>
             <div class="user-info">
-                <div class="user-name">김아무개</div>
-                <div class="user-email">gemini-user@example.com</div>
+                <div class="user-name" th:text="${user.name}">김아무개</div>
+                <div class="user-email" th:text="${user.email}">gemini-user@example.com</div>
             </div>
             <a href="#" class="edit-btn">프로필 수정</a>
         </section>
@@ -58,7 +58,9 @@
         </section>
 
         <section class="card action-card">
-            <a href="#" class="logout-btn">로그아웃</a>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">로그아웃</button>
+            </form>
         </section>
     </main>
 </div>

@@ -100,14 +100,22 @@ main {
     padding: 0;
 }
 .logout-btn {
+    /* 기존 스타일과 동일하게 맞춤 */
     display: block;
+    width: 100%;
     padding: 16px 24px;
     text-align: center;
     text-decoration: none;
     color: #ff4d4f;
     font-weight: 500;
-}
 
+    /* button 태그를 위한 추가 스타일 */
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: inherit; /* 부모 폰트 크기 상속 */
+    font-family: inherit; /* 부모 폰트 상속 */
+}
 
 /* 하단 내비게이션 바 (공통 스타일) */
 .bottom-nav {
