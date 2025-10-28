@@ -24,7 +24,10 @@
             <div th:if="${param.error}" class="error-message">
                 아이디 또는 비밀번호가 올바르지 않습니다.
             </div>
-
+            <div class="form-group remember-me">
+                <input type="checkbox" id="remember-me" name="remember-me">
+                <label for="remember-me">로그인 상태 유지</label>
+            </div>
             <button type="submit" class="btn btn-primary">로그인</button>
         </form>
 

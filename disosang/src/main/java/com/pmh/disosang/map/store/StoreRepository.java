@@ -15,7 +15,7 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     Optional<Store> findByPlaceName(String placeName);
     List<Store> findByXIsNull();
-
+    Optional<Store> findByStoreId(Long storeId);
 
     @Query("""
 SELECT DISTINCT s FROM Store s

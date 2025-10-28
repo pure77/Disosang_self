@@ -7,6 +7,7 @@ import com.pmh.disosang.map.store.entity.Store;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,5 +46,15 @@ public class StoreService {
 
     }
 
+    //가게 상세 정보 조회
+    @Transactional(readOnly = true)
+    public StoreResponse findById(long storeId) {
+        Store store = storeRepository.findById(storeId).orElseThrow(() -> new IllegalArgumentException("ID에 해당하는 가게가 없습니다"));
+
+        // 2. DTO에 정의된 fromEntity 메서드를 사용해 변환 후 반환합니다.
+        return StoreResponse.fromEntity(store);
+
+
+    }
 
 }

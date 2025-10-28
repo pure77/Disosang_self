@@ -1,0 +1,271 @@
+/* Noto Sans KR 폰트 (map.css와 동일) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f5f5f5;
+    /* 하단바 공간 확보 */
+    padding-bottom: 70px;
+}
+
+.detail-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #fff;
+}
+
+/* 1. 헤더 */
+.detail-header {
+    padding: 20px 15px;
+    border-bottom: 1px solid #eee;
+}
+.detail-header h1 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+}
+.detail-header .category {
+    font-size: 14px;
+    color: #888;
+}
+
+/* 2. 빠른 실행 버튼 */
+.action-buttons {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    border-bottom: 10px solid #f5f5f5;
+}
+.action-buttons .btn {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+}
+.action-buttons .btn span {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+.action-buttons .btn.primary {
+    color: #0075ff;
+    font-weight: 700;
+}
+
+/* 3. 메인 콘텐츠 */
+.detail-content {
+    padding: 15px;
+}
+
+/* 이미지 플레이스홀더 */
+.photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    background-color: #f0f1f5;
+    border-radius: 8px;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+.photo-placeholder span {
+    font-size: 40px;
+}
+.photo-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* 탭 메뉴 */
+.content-tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+.content-tabs .tab {
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #888;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+}
+.content-tabs .tab.active {
+    color: #0075ff;
+    border-bottom-color: #0075ff;
+}
+
+/* 정보 그룹 */
+.info-group {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f1f5;
+}
+.info-group h3 {
+    font-size: 18px;
+    margin: 0 0 15px 0;
+}
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+.info-item .icon {
+    font-size: 20px;
+    width: 30px;
+    margin-right: 10px;
+}
+.info-item .text p {
+    margin: 0;
+    line-height: 1.6;
+}
+.info-item .text .jibun {
+    font-size: 13px;
+    color: #888;
+}
+.info-item .label {
+    font-size: 14px;
+    color: #888;
+    width: 60px;
+}
+
+/* 리뷰 남기기 */
+.review-prompt {
+    text-align: center;
+}
+.review-prompt .stars {
+    font-size: 30px;
+    color: #ccc;
+    cursor: pointer;
+}
+
+/* (map.css에서 복사) 하단 네비게이션 바 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    background-color: #ffffff;
+    border-top: 1px solid #f0f1f5;
+    padding: 8px 0;
+    z-index: 20;
+    max-width: 600px;
+    /* max-width 적용을 위해 left, right 수정 */
+    left: 50%;
+    transform: translateX(-50%);
+}
+.nav-item {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: #888;
+}
+.nav-item.active {
+    color: #0075ff;
+}
+.nav-item .icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+}
+.nav-item .label {
+    font-size: 12px;
+    font-weight: 500;
+}
+/* 후기 작성 폼 */
+#review-form {
+    margin: 10px 0 30px 0;
+}
+#review-form textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.review-form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.review-form-actions .btn.primary {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 8px;
+    background-color: #0075ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* 별점 클릭 스타일 */
+.review-prompt .stars .filled {
+    color: #ffc107; /* 채워진 별 색상 */
+}
+
+/* 후기 목록 */
+.review-list {
+    border-top: 10px solid #f5f5f5;
+    padding-top: 20px;
+}
+.review-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f1f5;
+}
+.review-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.user-avatar {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f1f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+.user-name {
+    font-weight: 700;
+}
+.review-meta {
+    font-size: 12px;
+    color: #888;
+}
+.review-stars {
+    font-weight: 700;
+    color: #f0ad4e;
+    margin-bottom: 10px;
+}
+.review-text {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+.review-photo img {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.review-like button {
+    background: #f5f5f5;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}

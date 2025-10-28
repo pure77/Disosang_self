@@ -1,6 +1,7 @@
 package com.pmh.disosang.map.store.entity;
 
 
+import com.pmh.disosang.review.entity.Review;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -21,7 +22,7 @@ public class Store {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "store_id")
-    private Long id;
+    private Long storeId;
 
     @Column(name = "place_name", nullable = false, length = 100)
     private String placeName;
@@ -50,10 +51,37 @@ public class Store {
     @NotNull
     private  String storeType;
 
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    @Column(name = "review_count")
+    private Integer reviewCount =0;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    // Store(1)이 Review(N)를 가짐
+    @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Review> reviews = new ArrayList<>();
+
+    public void updateRating(Review newReview, boolean isAdding) {
+        if (isAdding) {
+            // (기존 총점 + 새 별점) / (기존 리뷰 수 + 1)
+            double totalRating = (this.averageRating * this.reviewCount) + newReview.getRating();
+            this.reviewCount++;
+            this.averageRating = totalRating / this.reviewCount;
+        } else {
+            // (기존 총점 - 삭제할 별점) / (기존 리뷰 수 - 1)
+            double totalRating = (this.averageRating * this.reviewCount) - newReview.getRating();
+            this.reviewCount--;
+            this.averageRating = (this.reviewCount > 0) ? totalRating / this.reviewCount : 0.0;
+        }
+    }
 
 
     @PrePersist
-    protected void onCreate() {
+    protected void onCreate () {
+
         this.createdAt = LocalDateTime.now();
     }
 }

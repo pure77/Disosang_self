@@ -112,12 +112,18 @@ function createInfoWindowContent(store) {
     const stars = '★'.repeat(Math.floor(store.rating)) + '☆'.repeat(5 - Math.floor(store.rating));
     const directionsUrl = `https://map.kakao.com/link/to/${store.placeName},${store.y},${store.x}`;
 
+    // 상세 페이지로 이동할 URL
+    const detailUrl = `/store/detail/${store.id}`; // store.id를 사용 (서버에서 id를 보내줘야 함)
+
     return `
     <div class="infowindow-wrap">
         <div class="close-btn" onclick="closeInfoWindow()">×</div>
+
         <div class="info-header">
-            <div>
-                <div class="title">${store.placeName}</div>
+            <div class="text-content">
+                <a href="${detailUrl}" style="text-decoration: none; color: inherit;">
+                    <div class="title">${store.placeName}</div>
+                </a>
                 <div class="rating">
                     <span class="star">${stars}</span>
                     <strong>${store.rating}</strong>
@@ -125,24 +131,30 @@ function createInfoWindowContent(store) {
                     <span>리뷰 ${store.reviewCount}</span>
                 </div>
             </div>
-            ${store.thumbnailUrl ? `<img src="${store.thumbnailUrl}" alt="${store.placeName}" class="thumbnail">` : ''}
+
+            ${store.thumbnailUrl ?
+                `<a href="${detailUrl}">
+                    <img src="${store.thumbnailUrl}" alt="${store.placeName}" class="thumbnail">
+                 </a>` : ''}
         </div>
+
         <div class="info-body">
             <p>${store.roadAddressName || store.addressName}</p>
             <p class="jibun">(지번) ${store.addressName}</p>
             <p>${store.phone || '전화번호 정보 없음'}</p>
         </div>
+
         <div class="info-links">
             <a href="${store.placeUrl || '#'}" target="_blank">상세보기</a>
             <a href="#">정보 수정 제안</a>
             <a href="#">홈페이지</a>
         </div>
+
         <div class="info-buttons">
             <a href="#">&#x1F516; 저장</a>
             <a href="#">&#x1F4CD; 위치</a>
-            <a href="#">&#x1F517; 공유</a>
-            <a href="${directionsUrl}" target="_blank" style="background-color: #4285f4; color: white; font-weight: bold;">길찾기</a>
-        </div>
+            <a href="${directionsUrl}" target="_blank" class="directions">길찾기</a>
+            </div>
     </div>
     `;
 }

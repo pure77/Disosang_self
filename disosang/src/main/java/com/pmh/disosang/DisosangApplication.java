@@ -9,6 +9,7 @@ public class DisosangApplication {
 	public static void main(String[] args) {
 
 		SpringApplication.run(DisosangApplication.class, args);
+
 	}
 
 }

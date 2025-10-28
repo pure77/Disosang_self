@@ -21,10 +21,12 @@ public class StoreResponse {
     private  String storeType;
     private Double x;  // 경도
     private Double y;  // 위도
-
+    private Double rating;        // 별점
+    private Integer reviewCount;  // 리뷰 수
+    private String thumbnailUrl;  // 썸네일 이미지 URL
     public static StoreResponse fromEntity(Store store) {
         return StoreResponse.builder()
-                .id(store.getId())
+                .id(store.getStoreId())
                 .placeName(store.getPlaceName())
                 .category(store.getCategory())
                 .addressName(store.getAddressName())
