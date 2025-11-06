@@ -92,30 +92,66 @@
                     <p>아직 등록된 후기가 없습니다. 첫 후기를 남겨주세요!</p>
                 </div>
 
-                <div classS="review-item" th:each="review : ${reviews}">
+                <div class="review-item" th:each="review : ${reviews}">
                     <div class="review-header">
                         <div class="user-avatar">👤</div>
                         <div class="user-info">
                             <div class="user-name" th:text="${review.authorName}">사용자 이름</div>
                         </div>
-                    </div>
-                    <div class="review-stars">
-        <span th:each="i : ${#numbers.sequence(1, 5)}">
-            <span th:if="${i <= review.rating}" style="color: #f0ad4e;">★</span>
-            <span th:if="${i > review.rating}" style="color: #ccc;">☆</span>
-        </span>
 
-                        <span th:text="${review.rating} + '.0'" style="margin-left: 5px; color: #f0ad4e; font-weight: bold;">5.0</span>
-                    </div>
-                    <p class="review-text" th:text="${review.content}">리뷰 내용</p>
+                        <div class="review-actions" th:if="${review.isMine}">
+                            <button class="btn-edit" th:data-review-id="${review.reviewId}">수정</button>
 
-                    <div class="review-photo-list" th:if="${!#lists.isEmpty(review.photoUrls)}">
-                        <div class="review-photo" th:each="photoUrl : ${review.photoUrls}">
-                            <img th:src="${photoUrl}" alt="리뷰 사진" style="width:100px; height:100px; object-fit: cover;">
+                            <form th:action="@{/reviews/delete/{id}(id=${review.reviewId})}" method="POST"
+                                  class="delete-form" style="display: inline;">
+
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                                <button type="submit" class="btn-delete" th:data-review-id="${review.reviewId}">삭제</button>
+                            </form>
                         </div>
                     </div>
-                    <div class="review-like">
 
+                    <div class="review-display">
+                        <div class="review-stars">
+            <span th:each="i : ${#numbers.sequence(1, 5)}">
+                <span th:if="${i <= review.rating}" style="color: #f0ad4e;">★</span>
+                <span th:if="${i > review.rating}" style="color: #ccc;">☆</span>
+            </span>
+                            <span th:text="${review.rating} + '.0'" style="margin-left: 5px; color: #f0ad4e; font-weight: bold;">5.0</span>
+                        </div>
+                        <p class="review-text" th:text="${review.content}">리뷰 내용</p>
+
+                        <div class="review-photo-list" th:if="${!#lists.isEmpty(review.photoUrls)}">
+                            <div class="review-photo" th:each="photoUrl : ${review.photoUrls}">
+                                <img th:src="${photoUrl}" alt="리뷰 사진" style="width:100px; height:100px; object-fit: cover;">
+                            </div>
+                        </div>
+                    </div>
+                    <form class="review-edit-form" style="display: none;"
+                          th:data-review-id="${review.reviewId}"
+                          th:action="@{/reviews/{id}/edit(id=${review.reviewId})}" method="post">
+
+                        <input type="hidden" class="edit-rating-input" name="rating" th:value="${review.rating}" />
+
+                        <div class="stars edit-stars">
+                            <span data-value="1">☆</span>
+                            <span data-value="2">☆</span>
+                            <span data-value="3">☆</span>
+                            <span data-value="4">☆</span>
+                            <span data-value="5">☆</span>
+                        </div>
+
+                        <textarea name="content" th:text="${review.content}">기존 리뷰 내용</textarea>
+
+                        <div class="review-form-actions">
+                            <span></span> <div>
+                            <button type="button" class="btn btn-edit-cancel">취소</button>
+                            <button type="submit" class="btn primary btn-edit-save">수정 완료</button>
+                        </div>
+                        </div>
+                    </form>
+                    <div class="review-like">
                     </div>
                 </div>
             </div>

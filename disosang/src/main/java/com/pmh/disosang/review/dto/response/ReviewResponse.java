@@ -13,8 +13,8 @@ public class ReviewResponse {
     private String content;
     private String authorName; // User 엔티티에서 이름만 추출
     private List<String> photoUrls; // Photo 엔티티에서 URL만 추출
-
-    public ReviewResponse(Review review) {
+    private boolean isMine; // 현재 로그인한 유저가 작성했는지 여부
+    public ReviewResponse(Review review,boolean isMine) {
         this.reviewId = review.getReviewId();
         this.rating = review.getRating();
         this.content = review.getContent();
@@ -22,5 +22,6 @@ public class ReviewResponse {
         this.photoUrls = review.getPhotos().stream()
                 .map(photo -> photo.getFileUrl())
                 .collect(Collectors.toList());
+        this.isMine = isMine;
     }
 }

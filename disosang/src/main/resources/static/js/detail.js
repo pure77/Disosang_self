@@ -62,3 +62,156 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 });
+// DOM이 모두 로드되었을 때 스크립트 실행
+document.addEventListener('DOMContentLoaded', function() {
+
+    // --- 1. 탭 전환 기능 ---
+    // ... (기존 탭 전환 코드 ... (생략)) ...
+    const tabHome = document.getElementById('tab-home');
+    const tabReview = document.getElementById('tab-review');
+    const panelHome = document.getElementById('panel-home');
+    const panelReview = document.getElementById('panel-review');
+
+    tabHome.addEventListener('click', function(e) {
+        e.preventDefault();
+        panelHome.style.display = 'block';
+        panelReview.style.display = 'none';
+        tabHome.classList.add('active');
+        tabReview.classList.remove('active');
+    });
+
+    tabReview.addEventListener('click', function(e) {
+        e.preventDefault();
+        panelHome.style.display = 'none';
+        panelReview.style.display = 'block';
+        tabReview.classList.add('active');
+        tabHome.classList.remove('active');
+    });
+
+
+    // --- 2. 별점 클릭 및 후기 폼 표시 기능 ---
+    // ... (기존 새 리뷰 별점 코드 ... (생략)) ...
+    const reviewStars = document.querySelectorAll('#review-stars span');
+    const reviewForm = document.getElementById('review-form');
+    const ratingInput = document.getElementById('rating');
+
+    reviewStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.dataset.value;
+            ratingInput.value = rating;
+
+            reviewStars.forEach(s => {
+                if (s.dataset.value <= rating) {
+                    s.innerHTML = '★';
+                    s.classList.add('filled');
+                } else {
+                    s.innerHTML = '☆';
+                    s.classList.remove('filled');
+                }
+            });
+            reviewForm.style.display = 'block';
+        });
+    });
+
+
+    //
+    // ▼▼▼ [이 아래로 코드가 추가되었습니다] ▼▼▼
+    //
+
+    // --- 3. 수정 폼 내부의 별점 클릭 기능 ---
+    // '.edit-stars' 클래스를 가진 모든 별점 세트에 대해 이벤트 리스너 설정
+    const allEditStars = document.querySelectorAll('.edit-stars');
+    allEditStars.forEach(starSet => {
+        const stars = starSet.querySelectorAll('span');
+        const editForm = starSet.closest('.review-edit-form');
+        const ratingInput = editForm.querySelector('.edit-rating-input');
+
+        // 폼이 처음 보일 때, input의 초기 값(th:value)에 따라 별을 채움
+        fillStars(stars, ratingInput.value);
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.value;
+                ratingInput.value = rating;
+                fillStars(stars, rating);
+            });
+        });
+    });
+
+    // 별 채우기 헬퍼 함수
+    function fillStars(starElements, rating) {
+        starElements.forEach(s => {
+            if (s.dataset.value <= rating) {
+                s.innerHTML = '★';
+                s.classList.add('filled');
+            } else {
+                s.innerHTML = '☆';
+                s.classList.remove('filled');
+            }
+        });
+    }
+
+
+    // --- 4. 수정 / 삭제 / 취소 버튼 이벤트 처리 (이벤트 위임 사용) ---
+    const reviewList = document.querySelector('.review-list');
+
+    if (reviewList) {
+        reviewList.addEventListener('click', function(e) {
+
+            const reviewItem = e.target.closest('.review-item');
+            if (!reviewItem) return; // 리뷰 아이템 밖에서 클릭한 건 무시
+
+            // (1) '삭제' 버튼 클릭 시
+        if (e.target.matches('.btn-delete')) {
+                    // fetch() 대신 form의 기본 동작(submit)을 가로채서 확인창만 띄웁니다.
+                    e.preventDefault();
+
+                    if (confirm('정말 삭제하시겠습니까?')) {
+                        // '확인'을 누르면, 버튼이 속한 <form>을 찾아 제출(submit)시킵니다.
+                        const deleteForm = e.target.closest('form.delete-form');
+                        if (deleteForm) {
+                            deleteForm.submit();
+                        }
+                    }
+                    // '취소'를 누르면 아무 일도 일어나지 않습니다.
+                }
+
+            // (2) '수정' 버튼 클릭 시
+            if (e.target.matches('.btn-edit')) {
+                e.preventDefault();
+                const displayArea = reviewItem.querySelector('.review-display');
+                const editForm = reviewItem.querySelector('.review-edit-form');
+
+                // 기존 내용 숨기고, 수정 폼 보여주기
+                displayArea.style.display = 'none';
+                editForm.style.display = 'block';
+
+                // 폼이 보일 때 현재 별점으로 다시 채워줌 (필수)
+                const ratingInput = editForm.querySelector('.edit-rating-input');
+                const stars = editForm.querySelectorAll('.edit-stars span');
+                fillStars(stars, ratingInput.value);
+            }
+
+            // (3) '취소' 버튼 클릭 시
+            if (e.target.matches('.btn-edit-cancel')) {
+                e.preventDefault();
+                const displayArea = reviewItem.querySelector('.review-display');
+                const editForm = reviewItem.querySelector('.review-edit-form');
+
+                // 수정 폼 숨기고, 기존 내용 보여주기
+                editForm.style.display = 'none';
+                displayArea.style.display = 'block';
+            }
+
+            // (4) '수정 완료' (제출) 버튼은 <form>의 기본 submit 이벤트를 사용합니다.
+            // (fetch를 사용하려면 e.preventDefault() 후 btn-edit-save 클릭을 잡아야 함)
+        });
+    }
+    if (window.location.hash === '#panel-review') {
+            // '후기' 탭(id='tab-review')을 찾아서 강제로 click() 이벤트를 실행
+            const reviewTab = document.getElementById('tab-review');
+            if (reviewTab) {
+                reviewTab.click();
+            }
+        }
+});

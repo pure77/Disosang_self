@@ -50,17 +50,14 @@ function doSearch(keyword){
     fetch('/store/map/search?' + params.toString())
         .then(res => res.json())
         .then(data => {
-            // 테스트용 임시 데이터 추가
-            const testData = data.map(store => ({
-                ...store,
-                rating: (Math.random() * 2 + 3).toFixed(1),
-                ratingCount: Math.floor(Math.random() * 50),
-                reviewCount: Math.floor(Math.random() * 100),
-                phone: '070-8822-2211',
-                placeUrl: `https://map.kakao.com/link/map/${store.id}`,
-                thumbnailUrl: 'https://via.placeholder.com/70'
-            }));
-            currentStores = testData;
+            //
+            // [수정된 부분 1] : 테스트용 임시 데이터 생성 로직 제거
+            //
+            // const testData = data.map(store => ({ ... })); <-- 이 블록 전체 제거
+
+            // 서버에서 받은 실제 데이터를 currentStores에 할당합니다.
+            // 이제 서버 응답에 'rating', 'reviewCount' 등이 포함되어 있어야 합니다.
+            currentStores = data;
 
             currentPage = 1;
             closeInfoWindow();
@@ -88,6 +85,7 @@ function showStores(){
         const content = createInfoWindowContent(store);
 
         kakao.maps.event.addListener(marker, 'click', function() {
+        console.log("마커 클릭 / 가게 데이터:", store);
             infowindow.setContent(content);
             infowindow.open(map, marker);
         });
@@ -107,13 +105,42 @@ function showStores(){
     renderPagination();
 }
 
-// 인포윈도우 HTML 콘텐츠 생성
+//
+// [수정된 부분 2] : 별점/리뷰가 없을 경우를 처리하도록 함수 수정
+//
 function createInfoWindowContent(store) {
-    const stars = '★'.repeat(Math.floor(store.rating)) + '☆'.repeat(5 - Math.floor(store.rating));
-    const directionsUrl = `https://map.kakao.com/link/to/${store.placeName},${store.y},${store.x}`;
+    console.log("클릭한 가게 데이터:", store);
+    // 별점 및 리뷰 HTML을 동적으로 생성
+    let ratingHtml = '';
+    // store.averageRating이 0보다 큰 유효한 값일 때만 별점/리뷰를 표시
+    if (store.averageRating && store.averageRating > 0) {
+        const stars = '★'.repeat(Math.floor(store.averageRating)) + '☆'.repeat(5 - Math.floor(store.averageRating));
 
-    // 상세 페이지로 이동할 URL
-    const detailUrl = `/store/detail/${store.id}`; // store.id를 사용 (서버에서 id를 보내줘야 함)
+        // ratingCount와 reviewCount도 유효한 경우에만 표시
+        const ratingCountText = (store.averageRatingCount && store.averageRatingCount > 0)
+                              ? `<span class="count">(${store.averageRatingCount}건)</span>`
+                              : '';
+        const reviewText = (store.reviewCount && store.reviewCount > 0)
+                         ? `<span>리뷰 ${store.reviewCount}</span>`
+                         : '';
+
+        ratingHtml = `
+        <div class="rating">
+            <span class="star">${stars}</span>
+            <strong>${store.averageRating}</strong>
+            ${ratingCountText}
+            ${reviewText}
+        </div>`;
+    } else {
+        // 별점/리뷰 정보가 없는 경우
+        ratingHtml = `
+        <div class="rating">
+            <span class="no-rating" style="color: #888; font-size: 13px;">별점/리뷰 정보가 없습니다.</span>
+        </div>`;
+    }
+
+    const directionsUrl = `https://map.kakao.com/link/to/${store.placeName},${store.y},${store.x}`;
+    const detailUrl = `/store/detail/${store.id}`;
 
     return `
     <div class="infowindow-wrap">
@@ -124,12 +151,7 @@ function createInfoWindowContent(store) {
                 <a href="${detailUrl}" style="text-decoration: none; color: inherit;">
                     <div class="title">${store.placeName}</div>
                 </a>
-                <div class="rating">
-                    <span class="star">${stars}</span>
-                    <strong>${store.rating}</strong>
-                    <span class="count">(${store.ratingCount}건)</span>
-                    <span>리뷰 ${store.reviewCount}</span>
-                </div>
+                ${ratingHtml}
             </div>
 
             ${store.thumbnailUrl ?

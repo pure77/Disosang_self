@@ -9,4 +9,5 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review,Long > {
     // Store 객체를 받아 리뷰를 최신순으로 정렬
     List<Review> findByStoreOrderByReviewIdDesc(Store store);
+
 }

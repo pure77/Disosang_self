@@ -11,6 +11,8 @@ import com.pmh.disosang.review.entity.Review;
 import com.pmh.disosang.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,11 +24,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final StoreRepository storeRepository;
 
-    @Transactional
+
     public void createReview(ReviewRequest reviewRequest,List<MultipartFile> photos ,User user) {
         log.info("리뷰 생성 시작: storeId={}, rating={}, userEmail={}", reviewRequest.getStoreId(), reviewRequest.getRating(), user.getEmail()); // DTO 값 로깅
         Store store = storeRepository.findById(reviewRequest.getStoreId())
@@ -60,18 +63,74 @@ public class ReviewService {
     }
 
     //특정 가게 리뷰 조회
-    @Transactional
+
     public List<ReviewResponse> getReviews(long storeId) {
+// (1) 현재 로그인중한 사용자 정보 가져오기
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = null; // 비로그인 상태(anonymousUser)를 대비해 null로 초기화
+
+        // principal이 User 객체인지 확인 후 캐스팅
+        if (principal instanceof User) {
+            currentUser = (User) principal;
+        }
+
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
 
+        // (2) 람다에서 사용하기 위해 final 또는 effectively final 변수가 필요
+        User finalCurrentUser = currentUser;
+
         return reviewRepository.findByStoreOrderByReviewIdDesc(store)
                 .stream()
-                .map(ReviewResponse::new) // Review 엔티티를 ReviewResponse DTO로 변환
+                // (3) ReviewResponse::new를 람다식으로 변경
+                .map(review -> {
+
+                    boolean isMine = false; // 기본값은 false (내 리뷰 아님)
+
+                    // (4) 로그인한 사용자(finalCurrentUser)가 있고, 리뷰 작성자(review.getUser())도 있는지 확인
+                    if (finalCurrentUser != null && review.getUser() != null) {
+
+                        // (5) 두 사용자의 고유 ID를 비교 (getId()는 Long을 반환한다고 가정)
+                        isMine = review.getUser().getId().equals(finalCurrentUser.getId());
+                    }
+
+                    // (6) isMine 값을 포함하여 새 생성자(new ReviewResponse(review, isMine))를 호출
+                    return new ReviewResponse(review, isMine);
+                })
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+    public long deleteReview(long reviewId, User currentUser) {
+
+        // 1. 리뷰를 DB에서 찾습니다. (Store 정보까지 fetch join하면 더 좋음)
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리뷰입니다: " + reviewId));
+
+        // 2. [중요] 권한 확인: 리뷰 작성자와 현재 로그인한 유저가 같은지 확인
+        if (review.getUser() == null || !review.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("리뷰를 삭제할 권한이 없습니다.");
+        }
+
+        // 3. Store 엔티티를 가져옵니다.
+        Store store = review.getStore();
+        if (store == null) {
+            throw new IllegalArgumentException("리뷰에 연결된 가게 정보가 없습니다.");
+        }
+
+        // 4. [핵심] store의 평점/리뷰 수를 '삭제' 모드로 업데이트합니다.
+        store.updateRating(review, false); // 'false' = 삭제
+
+        // 5. 변경된 store 정보를 DB에 저장합니다.
+        storeRepository.save(store);
+
+        // 6. 리뷰를 DB에서 삭제합니다.
+        reviewRepository.delete(review);
+
+        // 7. 리다이렉트를 위해 storeId 반환
+        return store.getStoreId();
+    }
+
+
     List<Photo> uploadPhotos(List<MultipartFile> files, Store store, User user) {
         List<Photo> photoEntities = new ArrayList<>();
 
