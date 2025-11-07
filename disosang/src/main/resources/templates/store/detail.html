@@ -130,8 +130,8 @@
                     </div>
                     <form class="review-edit-form" style="display: none;"
                           th:data-review-id="${review.reviewId}"
-                          th:action="@{/reviews/{id}/edit(id=${review.reviewId})}" method="post">
-
+                          th:action="@{/reviews/edit/{id}(id=${review.reviewId})}" method="post">
+                        <input type="hidden" name="storeId" th:value="${store.id}" />
                         <input type="hidden" class="edit-rating-input" name="rating" th:value="${review.rating}" />
 
                         <div class="stars edit-stars">

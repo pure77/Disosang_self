@@ -4,6 +4,7 @@ package com.pmh.disosang.review.controller;
 import com.pmh.disosang.review.dto.request.ReviewRequest;
 import com.pmh.disosang.review.service.ReviewService; // ✅ Service 임포트
 import com.pmh.disosang.user.entity.User; // ✅ User 엔티티 임포트
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -57,6 +58,60 @@ public class ReviewController {
         return "redirect:/store/detail/" + redirectStoreId;
     }
 
+    @PostMapping("/edit/{reviewId}")
+    public String editReview(
+            @PathVariable("reviewId") long reviewId,
+            @ModelAttribute ReviewRequest reviewRequest, // 1. 폼 데이터를 받을 DTO
+            @AuthenticationPrincipal User currentUser, // 2. 현재 로그인 사용자
+            RedirectAttributes redirectAttributes
+    ) {
+        // 2. 비로그인 사용자 확인
+        if (currentUser == null) {
+            // 이 예외는 보통 Spring Security의 예외 처리기가 처리하지만,
+            // 핸들러에 도달했다면 명시적으로 처리할 수 있습니다.
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login"; // 로그인 페이지로 이동
+        }
+
+        // 3. 리다이렉트할 storeId를 DTO에서 미리 가져옵니다. (deleteReview와 다른 점)
+        //    addReview와 마찬가지로 DTO에 storeId가 있다고 가정합니다.
+
+        Long storeId = reviewRequest.getStoreId();
+        System.out.println("리뷰 리퀘스트 스토어아디"+storeId);
+        // (방어 코드) DTO에 storeId가 없는 비정상적 접근 처리
+        if (storeId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "잘못된 접근입니다. (가게 정보 누락)");
+            return "redirect:/home/home"; // 메인 홈으로
+        }
+
+        try {
+            // 4. 서비스에 수정 로직 위임 (권한 검사 포함)
+            reviewService.updateReview(reviewId, reviewRequest, currentUser);
+
+            // 5. 성공 시 리다이렉트 및 메시지 전달
+            redirectAttributes.addFlashAttribute("successMessage", "리뷰가 성공적으로 수정되었습니다.");
+            // ✅ 성공 시, 미리 받아둔 storeId를 사용하여 가게 상세 페이지로 이동
+            return "redirect:/store/detail/" + storeId + "#panel-review";
+
+        } catch (AccessDeniedException e) {
+            // 6. 권한 없는 경우 (남의 글 수정 시도)
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // ✅ 실패 시에도, 미리 받아둔 storeId를 사용하여 가게 상세 페이지로 이동
+            return "redirect:/store/detail/" + storeId + "#panel-review";
+
+        } catch (EntityNotFoundException e) {
+            // 7. 리뷰가 없는 경우
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage()); // "해당 리뷰를 찾을 수 없습니다."
+            // ✅ 실패 시에도, 미리 받아둔 storeId를 사용하여 가게 상세 페이지로 이동
+            return "redirect:/store/detail/" + storeId + "#panel-review";
+
+        } catch (Exception e) {
+            // 8. 그 외 알 수 없는 예외 처리
+            log.error("리뷰 수정 중 알 수 없는 오류 발생", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "리뷰 수정 중 오류가 발생했습니다.");
+            return "redirect:/store/detail/" + storeId + "#panel-review";
+        }
+    }
     @PostMapping("/delete/{reviewId}")
     public String deleteReview(@PathVariable("reviewId") long reviewId, // 'deleteReivew' -> 'deleteReview' 오타 수정
                                RedirectAttributes redirectAttributes) {

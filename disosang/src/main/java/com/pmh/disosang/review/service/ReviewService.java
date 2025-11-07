@@ -9,6 +9,7 @@ import com.pmh.disosang.review.dto.response.ReviewResponse;
 import com.pmh.disosang.review.entity.Photo;
 import com.pmh.disosang.review.entity.Review;
 import com.pmh.disosang.user.entity.User;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -130,6 +131,17 @@ public class ReviewService {
         return store.getStoreId();
     }
 
+    public void updateReview(long reviewId, ReviewRequest reviewRequest, User currentUser) {
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을수 없습니다"));
+        Store store = review.getStore();
+
+        store.updateEditRating(review.getRating(),reviewRequest.getRating());
+        if (!review.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("이 리뷰를 수정할 권한이 없습니다.");
+        }
+
+        review.update(reviewRequest.getContent(),reviewRequest.getRating());
+    }
 
     List<Photo> uploadPhotos(List<MultipartFile> files, Store store, User user) {
         List<Photo> photoEntities = new ArrayList<>();

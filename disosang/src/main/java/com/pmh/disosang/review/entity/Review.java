@@ -40,5 +40,9 @@ public class Review {
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
 
+    public void update(String newContent, int newRating) {
+        this.content = newContent;
+        this.rating = newRating;
+    }
     // ... (Getter, Setter, 생성자 등)
 }

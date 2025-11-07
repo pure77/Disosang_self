@@ -77,7 +77,17 @@ public class Store {
             this.averageRating = (this.reviewCount > 0) ? totalRating / this.reviewCount : 0.0;
         }
     }
+    public void updateEditRating(int oldRating, int newRating) {
+        // (기존 총점 - 옛날 별점 + 새 별점) / (기존 리뷰 수)
+        double totalRating = (this.averageRating * this.reviewCount) - oldRating + newRating;
+        // reviewCount는 변경되지 않습니다.
 
+        if (this.reviewCount > 0) {
+            this.averageRating = Math.round((totalRating / this.reviewCount) * 10.0) / 10.0;
+        } else {
+            this.averageRating = 0.0; // (수정 시 이 경우는 거의 없지만)
+        }
+    }
 
     @PrePersist
     protected void onCreate () {
