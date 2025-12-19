@@ -355,3 +355,110 @@ body {
     color: white;
     border-color: #0075ff;
 }
+.review-photo-list {
+    /* Flexbox를 사용하여 내부 요소(사진)를 가로로 배치 */
+    display: flex;
+
+    /* 뷰포트/부모 요소를 넘어가면 가로 스크롤바 표시 */
+    overflow-x: auto;
+
+    /* 세로 스크롤 숨김 (혹시 모를 스크롤 발생 방지) */
+    overflow-y: hidden;
+
+    /* 내부 요소가 줄바꿈되지 않도록 설정 (핵심!) */
+    white-space: nowrap;
+
+    /* 스크롤 영역과 리뷰 내용과의 간격 */
+    padding-bottom: 10px; /* 스크롤바 때문에 내용이 가려지지 않도록 패딩 추가 */
+    margin: 10px 0;
+
+    /* 스크롤바의 시각적 디자인을 원한다면 아래 주석 해제 (WebKit 기반 브라우저용) */
+    /*
+    -webkit-overflow-scrolling: touch;
+    &::-webkit-scrollbar {
+        height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    */
+}
+
+/* review-photo: 각 사진 아이템 */
+.review-photo {
+    /* 사진 사이에 간격 추가 */
+    margin-right: 8px;
+
+    /* 내부 요소가 줄어들지 않도록 설정 (사진 크기 유지) */
+    flex-shrink: 0;
+
+    /* 사진이 잘릴 경우 숨김 */
+    overflow: hidden;
+
+    /* 모서리를 둥글게 */
+    border-radius: 4px;
+}
+
+/* 사진 자체의 스타일 (detail.html에 inline으로 있으나, CSS로 관리 권장) */
+.review-photo img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover; /* 사진 비율 유지하며 영역 채우기 */
+    display: block; /* 불필요한 공백 제거 */
+}
+.existing-photos {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.photo-thumb-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.photo-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.btn-remove-photo {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+}
+/* 🌟 사진 미리보기 스타일 추가 */
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-item {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

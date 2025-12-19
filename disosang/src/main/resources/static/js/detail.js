@@ -215,3 +215,57 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 });
+
+// 삭제할 이미지 경로를 저장할 배열 (또는 폼 내부에 hidden input 생성)
+function removeExistingPhoto(button, photoUrl) {
+    if (!confirm("이 사진을 삭제하시겠습니까?")) return;
+
+    // 1. 화면에서 사진 요소 제거
+    const container = button.parentElement;
+    const form = container.closest('form');
+    container.style.display = 'none';
+
+    // 2. 서버로 전송할 '삭제 대상 리스트'에 추가
+    // hidden input을 생성하여 삭제할 파일의 URL이나 ID를 담아 전송합니다.
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'deletedPhotos'; // 서버 컨트롤러에서 받을 파라미터명
+    hiddenInput.value = photoUrl;
+
+    form.querySelector('.deleted-photos-container').appendChild(hiddenInput);
+}
+// --- 5. 사진 미리보기 기능 추가 ---
+
+    // 공통 미리보기 처리 함수
+    function handleImagePreview(input, previewContainer) {
+        if (!input || !previewContainer) return;
+
+        input.addEventListener('change', function(e) {
+            previewContainer.innerHTML = ''; // 기존 미리보기 초기화
+            const files = Array.from(e.target.files);
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `<img src="${event.target.result}">`;
+                    previewContainer.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    }
+
+    // (1) 새 리뷰 등록 폼 미리보기
+    const addPhotosInput = document.getElementById('photos');
+    const addPreviewContainer = document.getElementById('image-preview');
+    handleImagePreview(addPhotosInput, addPreviewContainer);
+
+    // (2) 리뷰 수정 폼 미리보기 (여러 개일 수 있으므로 반복문 처리)
+    const editForms = document.querySelectorAll('.review-edit-form');
+    editForms.forEach(form => {
+        const editInput = form.querySelector('.edit-photos-input');
+        const editPreview = form.querySelector('.edit-image-preview');
+        handleImagePreview(editInput, editPreview);
+    });

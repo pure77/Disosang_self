@@ -26,12 +26,12 @@ public class Review {
 
     private String content;
 
-    // Review(N)가 Store(1)에 속함
+    // Review(N)가 Store(1)에 속함 양방향
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    // Review(N)가 User(1)에 속함
+    // Review(N)가 User(1)에 속함 단방향
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // (User 엔티티 필요)

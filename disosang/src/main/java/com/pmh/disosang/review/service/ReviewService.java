@@ -14,10 +14,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,19 +31,21 @@ import java.util.stream.Collectors;
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final StoreRepository storeRepository;
-
+    private  final FileService fileService;
 
     public void createReview(ReviewRequest reviewRequest,List<MultipartFile> photos ,User user) {
         log.info("리뷰 생성 시작: storeId={}, rating={}, userEmail={}", reviewRequest.getStoreId(), reviewRequest.getRating(), user.getEmail()); // DTO 값 로깅
         Store store = storeRepository.findById(reviewRequest.getStoreId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 가게입니다."));
         log.info("가게 조회 완료: storeId={}", store.getStoreId());
-        // 2. Photo 파일 업로드 처리 (가상)
+        // 2. Photo 파일 업로드 처리
         List<Photo> photoEntities = uploadPhotos(photos, store, user);
         log.info("사진 업로드 처리 완료: {}개", photoEntities.size()); // 👈 사진 처리 확인
+
+
         Review review = new Review();
-        review.setUser(user);
-        review.setStore(store);
+        review.setUser(user); //연관 관계 설정
+        review.setStore(store);  //연관 관계 설정
 
         review.setRating(reviewRequest.getRating());
         review.setContent(reviewRequest.getContent());
@@ -50,6 +54,7 @@ public class ReviewService {
         for (Photo photo :photoEntities) {
             photo.setReview(review);// Photo 엔티티에 Review를 연결
         }
+
         log.info("사진-리뷰 연관관계 설정 완료");
         review.setPhotos(photoEntities);
 
@@ -81,7 +86,7 @@ public class ReviewService {
         // (2) 람다에서 사용하기 위해 final 또는 effectively final 변수가 필요
         User finalCurrentUser = currentUser;
 
-        return reviewRepository.findByStoreOrderByReviewIdDesc(store)
+        return reviewRepository.findReviewsByStoreWithFetchJoin(store)
                 .stream()
                 // (3) ReviewResponse::new를 람다식으로 변경
                 .map(review -> {
@@ -131,16 +136,44 @@ public class ReviewService {
         return store.getStoreId();
     }
 
-    public void updateReview(long reviewId, ReviewRequest reviewRequest, User currentUser) {
+    public void updateReview(long reviewId, ReviewRequest reviewRequest,
+                             List<MultipartFile> newPhotos, List<String> deletedPhotos,
+                             User currentUser) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을수 없습니다"));
-        Store store = review.getStore();
 
+        Store store = review.getStore();
         store.updateEditRating(review.getRating(),reviewRequest.getRating());
         if (!review.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("이 리뷰를 수정할 권한이 없습니다.");
         }
 
+        //기존 사진 삭제
+        if (deletedPhotos != null && !deletedPhotos.isEmpty()) {
+            //리스트에서 제거
+            review.getPhotos().removeIf(photo -> {
+                if (deletedPhotos.contains(photo.getFileUrl())) {
+                    //물리적 파일 삭제 로직 호출
+                    fileService.deleteFile(photo.getFileUrl());
+                    return  true;
+                }
+                return false;
+            });
+        }
+
+        //새로운 사진 업로드 및 연관관계 설정
+        if (newPhotos != null && !newPhotos.isEmpty()) {
+            List<Photo> addedPhotos = uploadPhotos(newPhotos, store, currentUser);
+            for (Photo photo : addedPhotos) {
+                photo.setReview(review);
+                review.getPhotos().add(photo);
+            }
+        }
+
+
+
         review.update(reviewRequest.getContent(),reviewRequest.getRating());
+
+        // @Transactional에 의해 변경 감지(Dirty Check)로 자동 저장됩니다
     }
 
     List<Photo> uploadPhotos(List<MultipartFile> files, Store store, User user) {
@@ -152,22 +185,27 @@ public class ReviewService {
         }
 
         for (MultipartFile file : files) {
-            if(files.isEmpty()) continue;
+            if(file.isEmpty()) continue;
 
-            // 1. (가상) 파일을 서버 어딘가에 저장 (예: S3, 로컬 스토리지)
-            // String savedUrl = "https://s3.example.com/" + file.getOriginalFilename();
-            // String savedFileName = file.getOriginalFilename();
+            try {
+                //1. FileService를 사용하여 파일을 로컬에 저장하고 웹 접근 URL 획득
+                String savedFileUrl = fileService.uploadFile(file);
+                String saveFileName = file.getOriginalFilename();
 
-            // 2. Photo 엔티티 생성
-            Photo photo = new Photo();
-            // photo.setFileUrl(savedUrl);
-            // photo.setFileName(savedFileName);
-            photo.setFileUrl("https://via.placeholder.com/150?text=" + file.getOriginalFilename()); // 임시 이미지 URL
-            photo.setStore(store);
-            // (Photo 엔티티에 User 연결이 있다면)
-            // photo.setUser(user);
+                //2.Photo 엔티티 생성
+                Photo photo = new Photo();
+                photo.setFileUrl(savedFileUrl);
+                photo.setFileName(saveFileName);
 
-            photoEntities.add(photo);
+                photo.setStore(store);
+
+                photoEntities.add(photo);
+            } catch (IOException e) {
+                //  파일 업로드/저장 실패 시 처리
+                log.error("파일 업로드 처리 중 IO 오류 발생: {}", file.getOriginalFilename(), e);
+                // 해당 파일은 무시하고, 리뷰 등록 자체는 진행하거나,
+                // throw new RuntimeException("파일 업로드 실패", e); // 트랜잭션 전체 롤백을 원할 경우
+            }
         }
         return photoEntities;
     }

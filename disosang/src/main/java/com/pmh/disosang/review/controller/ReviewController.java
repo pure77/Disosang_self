@@ -61,6 +61,8 @@ public class ReviewController {
     @PostMapping("/edit/{reviewId}")
     public String editReview(
             @PathVariable("reviewId") long reviewId,
+            @RequestParam(value = "photos", required = false) List<MultipartFile> photos, // 새 사진
+            @RequestParam(value = "deletedPhotos", required = false) List<String> deletedPhotos, // 삭제할 기존 사진 URL들
             @ModelAttribute ReviewRequest reviewRequest, // 1. 폼 데이터를 받을 DTO
             @AuthenticationPrincipal User currentUser, // 2. 현재 로그인 사용자
             RedirectAttributes redirectAttributes
@@ -77,7 +79,9 @@ public class ReviewController {
         //    addReview와 마찬가지로 DTO에 storeId가 있다고 가정합니다.
 
         Long storeId = reviewRequest.getStoreId();
+
         System.out.println("리뷰 리퀘스트 스토어아디"+storeId);
+
         // (방어 코드) DTO에 storeId가 없는 비정상적 접근 처리
         if (storeId == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "잘못된 접근입니다. (가게 정보 누락)");
@@ -86,7 +90,7 @@ public class ReviewController {
 
         try {
             // 4. 서비스에 수정 로직 위임 (권한 검사 포함)
-            reviewService.updateReview(reviewId, reviewRequest, currentUser);
+            reviewService.updateReview(reviewId, reviewRequest, photos, deletedPhotos, currentUser);
 
             // 5. 성공 시 리다이렉트 및 메시지 전달
             redirectAttributes.addFlashAttribute("successMessage", "리뷰가 성공적으로 수정되었습니다.");

@@ -8,5 +8,6 @@ import lombok.Setter;
 public class ReviewRequest {
     private long storeId; // 어느 가게인지
     private int rating;          // 몇 점인지
-    private String content;
+    private String content; //리뷰내요이 뭔지
+
 }

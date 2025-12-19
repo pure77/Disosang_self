@@ -103,3 +103,4 @@ logging:
     org.hibernate.SQL: DEBUG  # SQL만 보고 싶으면 DEBUG
     org.hibernate.type: TRACE # SQL 파라미터까지 보고 싶으면 TRACE
     com.disosang: DEBUG       # 내가 만든 패키지만 DEBUG
+
