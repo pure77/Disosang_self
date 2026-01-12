@@ -87,7 +87,14 @@
                 </div>
                 <div id="image-preview" class="image-preview-container"></div>
             </form>
-
+            <div class="review-sort-container">
+                <select id="review-sort-select">
+                    <option value="newest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                    <option value="rating-high">별점 높은순</option>
+                    <option value="rating-low">별점 낮은순</option>
+                </select>
+            </div>
             <div class="review-list">
                 <div th:if="${#lists.isEmpty(reviews)}" class="no-reviews">
                     <p>아직 등록된 후기가 없습니다. 첫 후기를 남겨주세요!</p>

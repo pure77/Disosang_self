@@ -214,6 +214,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 reviewTab.click();
             }
         }
+
+
+     //리뷰정렬
+       const sortSelect = document.getElementById('review-sort-select');
+           const reviewListContainer = document.querySelector('.review-list'); // 변수명 충돌 방지를 위해 이름 변경
+
+           if (sortSelect && reviewListContainer) {
+               sortSelect.addEventListener('change', function() {
+                   const sortType = this.value;
+                   // NodeList를 Array로 변환
+                   const reviews = Array.from(reviewListContainer.querySelectorAll('.review-item'));
+
+                   // 리뷰가 없으면 중단
+                   if (reviews.length === 0) return;
+
+                   reviews.sort((a, b) => {
+                       // 데이터 속성 가져오기 (없으면 0 처리)
+                       // dataset.id, dataset.rating, dataset.date 등이 HTML에 있어야 함
+                       const idA = parseInt(a.dataset.id || 0);
+                       const idB = parseInt(b.dataset.id || 0);
+                       const ratingA = parseFloat(a.dataset.rating || 0);
+                       const ratingB = parseFloat(b.dataset.rating || 0);
+
+                       // 날짜 비교를 위해 dataset.date가 있다면 사용, 없으면 id 사용
+                       // (여기서는 id가 높을수록 최신이라고 가정)
+
+                       switch (sortType) {
+                           case 'newest': // 최신순 (ID 내림차순)
+                               return idB - idA;
+                           case 'oldest': // 오래된순 (ID 오름차순)
+                               return idA - idB;
+                           case 'rating-high': // 별점 높은순
+                               return ratingB - ratingA;
+                           case 'rating-low': // 별점 낮은순
+                               return ratingA - ratingB;
+                           default:
+                               return 0;
+                       }
+                   });
+
+                   // 정렬된 순서대로 다시 append (화면 갱신)
+                   reviews.forEach(review => reviewListContainer.appendChild(review));
+               });
+           }
 });
 
 // 삭제할 이미지 경로를 저장할 배열 (또는 폼 내부에 hidden input 생성)
