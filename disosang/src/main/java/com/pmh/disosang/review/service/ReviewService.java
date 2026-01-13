@@ -12,6 +12,7 @@ import com.pmh.disosang.user.entity.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.parameters.P;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +51,7 @@ public class ReviewService {
 
         review.setRating(reviewRequest.getRating());
         review.setContent(reviewRequest.getContent());
+        review.setCreatedAt(LocalDateTime.now());
         log.info("Review 엔티티 생성 완료: rating={}", review.getRating()); // 👈 엔티티 생성 확인
         //Review와 Photo 연관관계 설정 (CascadeType.ALL 덕분에 Review 저장 시 Photo도 저장됨)
         for (Photo photo :photoEntities) {
@@ -70,7 +73,7 @@ public class ReviewService {
 
     //특정 가게 리뷰 조회
 
-    public List<ReviewResponse> getReviews(long storeId) {
+    public List<ReviewResponse> getReviews(long storeId,String sort) {
 // (1) 현재 로그인중한 사용자 정보 가져오기
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User currentUser = null; // 비로그인 상태(anonymousUser)를 대비해 null로 초기화
@@ -86,7 +89,26 @@ public class ReviewService {
         // (2) 람다에서 사용하기 위해 final 또는 effectively final 변수가 필요
         User finalCurrentUser = currentUser;
 
-        return reviewRepository.findReviewsByStoreWithFetchJoin(store)
+        //정렬 기준 생성 로직 추가
+        Sort sortCondition = Sort.by(Sort.Direction.DESC, "createdAt");
+        if (sort != null) {
+            switch (sort) {
+                case "oldest":{
+                    sortCondition = Sort.by(Sort.Direction.ASC, "createdAt");
+                    break;
+                }
+                case "rating-high":{
+                    sortCondition = Sort.by(Sort.Direction.DESC, "rating");
+                    break;
+                }
+                case "rating-low":{
+                    sortCondition = Sort.by(Sort.Direction.ASC, "rating");
+                    break;
+                }
+            }
+        }
+
+        return reviewRepository.findReviewsByStoreWithFetchJoin(store,sortCondition)
                 .stream()
                 // (3) ReviewResponse::new를 람다식으로 변경
                 .map(review -> {
@@ -171,7 +193,7 @@ public class ReviewService {
 
 
 
-        review.update(reviewRequest.getContent(),reviewRequest.getRating());
+        review.update(reviewRequest.getContent(),reviewRequest.getRating(),LocalDateTime.now());
 
         // @Transactional에 의해 변경 감지(Dirty Check)로 자동 저장됩니다
     }

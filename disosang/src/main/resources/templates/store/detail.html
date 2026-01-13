@@ -88,11 +88,11 @@
                 <div id="image-preview" class="image-preview-container"></div>
             </form>
             <div class="review-sort-container">
-                <select id="review-sort-select">
-                    <option value="newest">최신순</option>
-                    <option value="oldest">오래된순</option>
-                    <option value="rating-high">별점 높은순</option>
-                    <option value="rating-low">별점 낮은순</option>
+                <select id="review-sort-select" onchange="changeSort(this.value)">
+                    <option value="newest" th:selected="${sort == 'newest'}">최신순</option>
+                    <option value="oldest" th:selected="${sort == 'oldest'}">오래된순</option>
+                    <option value="rating-high" th:selected="${sort == 'rating-high'}">별점 높은순</option>
+                    <option value="rating-low" th:selected="${sort == 'rating-low'}">별점 낮은순</option>
                 </select>
             </div>
             <div class="review-list">

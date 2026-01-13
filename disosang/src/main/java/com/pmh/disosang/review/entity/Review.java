@@ -6,7 +6,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+//@EntityListeners(AuditingEntityListener.class)
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +29,10 @@ public class Review {
     private Integer rating;
 
     private String content;
+
+    @CreatedDate
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // Review(N)가 Store(1)에 속함 양방향
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,9 +48,10 @@ public class Review {
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
 
-    public void update(String newContent, int newRating) {
+    public void update(String newContent, int newRating,LocalDateTime newTime) {
         this.content = newContent;
         this.rating = newRating;
+        this.createdAt =newTime;
     }
     // ... (Getter, Setter, 생성자 등)
 }
