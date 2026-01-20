@@ -483,3 +483,166 @@ body {
 #review-sort-select:focus {
     border-color: #0075ff;
 }
+/* ▼▼▼ [사진 그리드 스타일 추가] ▼▼▼ */
+.photo-placeholder {
+    /* 기존 높이 제거하거나 auto로 변경 */
+    height: auto;
+    background-color: transparent; /* 배경 투명 */
+    margin-bottom: 20px;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* 그리드 컨테이너 */
+.photo-grid {
+    display: grid;
+    gap: 4px; /* 사진 사이 간격 */
+    width: 100%;
+    height: 250px; /* 그리드 전체 높이 고정 */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 그리드 내 이미지 공통 */
+.grid-item {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.grid-item:hover img {
+    transform: scale(1.05); /* 마우스 올리면 살짝 확대 */
+}
+
+/* 사진 개수별 레이아웃 패턴 */
+/* 1장일 때 */
+.photo-grid.type-1 { grid-template-columns: 1fr; }
+
+/* 2장일 때 (반반) */
+.photo-grid.type-2 { grid-template-columns: 1fr 1fr; }
+
+/* 3장일 때 (왼쪽 큰거, 오른쪽 2개) */
+.photo-grid.type-3 {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.photo-grid.type-3 .item-0 { grid-row: 1 / 3; } /* 첫번째 사진 길게 */
+
+/* 4장일 때 (왼쪽 큰거, 오른쪽 3개 - 1개는 길게) */
+.photo-grid.type-4 {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+.photo-grid.type-4 .item-0 { grid-row: 1 / 4; }
+
+/* 5장 이상일 때 (왼쪽 큰거, 오른쪽 4개 격자) - 요청하신 스타일 */
+.photo-grid.type-5 {
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.photo-grid.type-5 .item-0 {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+}
+
+/* "+N장" 더보기 오버레이 스타일 */
+.more-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* 어두운 반투명 배경 */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    pointer-events: none; /* 클릭은 부모 div가 받음 */
+}
+/* ▼▼▼ [모달(사진 확대) 필수 스타일] ▼▼▼ */
+.modal {
+    display: none; /* 평소에는 숨김 */
+    position: fixed;
+    z-index: 99999; /* 다른 모든 요소보다 위에 오도록 매우 높은 값 설정 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* 내용이 넘치면 스크롤 */
+    background-color: rgba(0, 0, 0, 0.9); /* 검은색 반투명 배경 */
+
+    /* Flexbox로 내용 중앙 정렬 */
+    display: none; /* JS에서 flex로 변경함 */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 모달이 활성화되었을 때 적용할 클래스 (JS에서 제어) */
+.modal.show {
+    display: flex !important;
+}
+
+/* 확대된 이미지 */
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    animation-name: zoom;
+    animation-duration: 0.3s;
+}
+
+/* 닫기 버튼 */
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100000;
+}
+
+/* 좌우 화살표 */
+.modal-nav {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -50px;
+    color: white;
+    font-weight: bold;
+    font-size: 40px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    z-index: 100000;
+}
+
+.modal-nav.prev { left: 20px; }
+.modal-nav.next { right: 20px; }
+
+.modal-nav:hover {
+    background-color: rgba(0,0,0,0.8);
+}
+
+/* 줌 애니메이션 */
+@keyframes zoom {
+    from {transform:scale(0)}
+    to {transform:scale(1)}
+}
