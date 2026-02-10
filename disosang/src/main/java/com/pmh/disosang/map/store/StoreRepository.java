@@ -18,21 +18,26 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Optional<Store> findByStoreId(Long storeId);
 
     @Query("""
-SELECT DISTINCT s FROM Store s
-WHERE s.x IS NOT NULL AND s.y IS NOT NULL
-  AND s.x BETWEEN :minLng AND :maxLng
-  AND s.y BETWEEN :minLat AND :maxLat
-  AND (
-      s.placeName LIKE %:keyword%
-   OR s.category LIKE %:keyword%
-   OR s.addressName LIKE %:keyword%
-   OR s.roadAddressName LIKE %:keyword%
-   OR s.storeType LIKE %:keyword%
-  )
-ORDER BY function('ST_Distance_Sphere', function('point', :centerLng, :centerLat), function('point', s.x, s.y))
-""")
-    List<Store> findStoresInAreaByKeywordOrderedByDistance(
+        SELECT DISTINCT s FROM Store s
+        WHERE s.x IS NOT NULL AND s.y IS NOT NULL
+          AND s.x BETWEEN :minLng AND :maxLng
+          AND s.y BETWEEN :minLat AND :maxLat
+          AND (
+                s.placeName LIKE %:keyword%
+             OR s.addressName LIKE %:keyword%
+             OR s.roadAddressName LIKE %:keyword%
+             OR s.storeType LIKE %:keyword%
+             OR s.category.id IN :categoryIds
+          )
+        ORDER BY function(
+            'ST_Distance_Sphere',
+            function('point', :centerLng, :centerLat),
+            function('point', s.x, s.y)
+        )
+    """)
+    List<Store> findStoresInAreaByCategoryAndKeywordOrderedByDistance(
             @Param("keyword") String keyword,
+            @Param("categoryIds") List<Long> categoryIds,
             @Param("centerLat") double centerLat,
             @Param("centerLng") double centerLng,
             @Param("minLat") double minLat,
@@ -41,12 +46,13 @@ ORDER BY function('ST_Distance_Sphere', function('point', :centerLng, :centerLat
             @Param("maxLng") double maxLng
     );
 
+
+
     @Query("""
 SELECT s FROM Store s
 WHERE s.x IS NOT NULL AND s.y IS NOT NULL
   AND (
       s.placeName LIKE %:keyword%
-   OR s.category LIKE %:keyword%
    OR s.addressName LIKE %:keyword%
    OR s.roadAddressName LIKE %:keyword%
    OR s.storeType LIKE %:keyword%
@@ -55,3 +61,4 @@ ORDER BY function('ST_Distance_Sphere', function('point', :centerLng, :centerLat
 """)
     List<Store> findStoresByKeyword(@Param("keyword") String keyword, @Param("centerLat") double centerLat, @Param("centerLng") double centerLng);
 }
+//   OR s.category LIKE %:keyword% 지워둠

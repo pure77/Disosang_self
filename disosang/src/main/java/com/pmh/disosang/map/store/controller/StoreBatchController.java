@@ -21,7 +21,7 @@ import java.io.IOException;
 @RequestMapping("/dev")
 @Tag(name = "가게 정보 저장 API", description = "가게 정보를 저장할때쓰는 API 입니다 한번실행후 실행X")
 public class StoreBatchController {
-
+/*
     private final StoreService storeService;
 
     private final StoreBatchService storeBatchService;
@@ -42,6 +42,6 @@ public class StoreBatchController {
             return ResponseEntity.status(500).body("CSV 저장 중 오류 발생: " + e.getMessage());
         }
 
-    }
+    }*/
 
 }

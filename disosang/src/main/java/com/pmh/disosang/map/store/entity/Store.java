@@ -27,8 +27,11 @@ public class Store {
     @Column(name = "place_name", nullable = false, length = 100)
     private String placeName;
 
-    @Column(length = 100)
-    private String category;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Column(name = "address_name")
     private String addressName;

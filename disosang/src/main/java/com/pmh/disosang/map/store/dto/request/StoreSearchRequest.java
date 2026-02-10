@@ -20,6 +20,7 @@ public class StoreSearchRequest {
     @Schema(description = "검색 키워드", example = "카페")
     private String keyword;
 
+
     @DecimalMin(value = "-90.0") @DecimalMax(value = "90.0")
     @Schema(description = "지도 중심 위도", example = "36.84950309992622")
     private double centerY;

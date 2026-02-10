@@ -25,7 +25,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         // 다음 URL들은 인증 없이 모든 사용자가 접근할 수 있도록 허용합니다.
-                        .requestMatchers("/", "/user/signup", "/user/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/user/signup", "/user/login", "/css/**", "/js/**", "/store/map/search").permitAll()
                         // 위에서 허용한 URL을 제외한 모든 요청은 인증을 받아야만 합니다.
                         .anyRequest().authenticated()
                 )

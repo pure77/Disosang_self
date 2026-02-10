@@ -18,7 +18,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class StoreBatchService {
-
+/*
     private final StoreRepository storeRepository;
     private static final String API_URL = "https://search.konacard.co.kr/api/v1/payable-merchants";
 
@@ -68,9 +68,9 @@ public class StoreBatchService {
 
         // 2. HTTP 헤더
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Accept", "application/json, text/javascript, */*; q=0.01");
-        headers.set("Origin", "https://search.konacard.co.kr");
+        headers.setContentType(MediaType.APPLICATION_JSON);*/
+       // headers.set("Accept", "application/json, text/javascript, */*; q=0.01");
+       /* headers.set("Origin", "https://search.konacard.co.kr");
         headers.set("Referer", "https://search.konacard.co.kr/payable-merchants/cheonan");
         headers.set("User-Agent", "Mozilla/5.0");
         headers.set("X-Requested-With", "XMLHttpRequest");
@@ -125,6 +125,6 @@ public class StoreBatchService {
     }
 
 
-
+*/
 }
 
