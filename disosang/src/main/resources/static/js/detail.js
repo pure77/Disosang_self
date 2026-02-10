@@ -1,138 +1,233 @@
 // DOM이 모두 로드되었을 때 스크립트 실행
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 1. 탭 전환 기능 ---
+    // =========================================
+    // [NEW] 1. 사진 그리드 및 모달(확대) 기능
+    // =========================================
+
+    // HTML(Thymeleaf)에서 전달받은 reviewPhotoList 확인 (없으면 빈 배열)
+    const allImages = (typeof reviewPhotoList !== 'undefined') ? reviewPhotoList : [];
+
+    const photoGrid = document.getElementById('photo-grid');
+    const noPhotoText = document.getElementById('no-photo-text');
+
+    // 모달 요소 가져오기
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('fullImage');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const prevBtn = document.querySelector('.modal-nav.prev');
+    const nextBtn = document.querySelector('.modal-nav.next');
+
+    let currentImageIndex = 0;
+
+    // (1) 상단 사진 그리드 그리기
+    if (allImages.length > 0) {
+        if(noPhotoText) noPhotoText.style.display = 'none';
+        renderPhotoGrid(allImages);
+    } else {
+        if(photoGrid) photoGrid.style.display = 'none';
+        if(noPhotoText) noPhotoText.style.display = 'flex';
+    }
+
+    function renderPhotoGrid(images) {
+        if (!photoGrid) return;
+
+        const count = images.length;
+
+        // CSS 클래스 결정을 위한 타입 설정 (1~5개 이상)
+        let typeClass = 'type-1';
+        if (count === 2) typeClass = 'type-2';
+        else if (count === 3) typeClass = 'type-3';
+        else if (count === 4) typeClass = 'type-4';
+        else if (count >= 5) typeClass = 'type-5';
+
+        photoGrid.className = `photo-grid ${typeClass}`;
+        photoGrid.innerHTML = ''; // 초기화
+
+        // 최대 5장까지만 그리드에 표시
+        const displayCount = Math.min(count, 5);
+
+        for (let i = 0; i < displayCount; i++) {
+            const container = document.createElement('div');
+            container.className = `grid-item item-${i}`;
+
+            const img = document.createElement('img');
+            img.src = images[i];
+
+            container.appendChild(img);
+
+            // 5번째 사진이고, 실제 사진이 더 많다면 "+N" 오버레이 추가
+            if (i === 4 && count > 5) {
+                const overlay = document.createElement('div');
+                overlay.className = 'more-overlay';
+                overlay.innerText = `+${count - 5}`;
+                container.appendChild(overlay);
+            }
+
+            // 클릭 시 모달 열기 (클로저 문제 해결을 위해 즉시 실행 함수 사용)
+            (function(index) {
+                container.onclick = function() {
+                    openModal(index);
+                };
+            })(i);
+
+            photoGrid.appendChild(container);
+        }
+    }
+
+    // (2) 리뷰 리스트의 작은 사진들도 모달 연결
+    const reviewListImages = document.querySelectorAll('.review-photo img');
+    reviewListImages.forEach((img) => {
+        img.style.cursor = 'pointer';
+        img.onclick = function() {
+            // 이미지 주소로 전체 리스트에서 인덱스 찾기
+            const src = img.getAttribute('src');
+            // 정확한 매칭을 위해 findIndex 사용
+            let index = allImages.findIndex(url => url === src);
+            if(index === -1) index = 0; // 혹시 못 찾으면 첫 번째 사진으로
+            openModal(index);
+        };
+    });
+
+
+    // --- 모달 제어 함수들 ---
+    function openModal(index) {
+        if (!modal || allImages.length === 0) return;
+        currentImageIndex = index;
+
+        modal.style.display = "flex"; // CSS에서 none이었던 것을 flex로 변경
+        if(modalImg) modalImg.src = allImages[currentImageIndex];
+
+        // 스크롤 방지
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.style.display = "none";
+        document.body.style.overflow = "auto"; // 스크롤 복구
+    }
+
+    // 닫기 버튼 이벤트
+    if (closeModalBtn) closeModalBtn.onclick = closeModal;
+
+    // 배경 클릭 시 닫기
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+
+    // 화살표 버튼 이벤트
+    if (prevBtn) {
+        prevBtn.onclick = function(e) {
+            e.stopPropagation();
+            changeSlide(-1);
+        };
+    }
+    if (nextBtn) {
+        nextBtn.onclick = function(e) {
+            e.stopPropagation();
+            changeSlide(1);
+        };
+    }
+
+    function changeSlide(step) {
+        currentImageIndex += step;
+        // 순환 구조 (처음 <-> 끝)
+        if (currentImageIndex < 0) currentImageIndex = allImages.length - 1;
+        if (currentImageIndex >= allImages.length) currentImageIndex = 0;
+
+        if(modalImg) modalImg.src = allImages[currentImageIndex];
+    }
+
+    // 키보드 이벤트 (화살표 좌우, ESC)
+    document.addEventListener('keydown', (e) => {
+        if (modal && modal.style.display === "flex") {
+            if (e.key === "ArrowLeft") changeSlide(-1);
+            if (e.key === "ArrowRight") changeSlide(1);
+            if (e.key === "Escape") closeModal();
+        }
+    });
+
+
+    // =========================================
+    // 2. 탭 전환 기능 (홈 <-> 후기)
+    // =========================================
     const tabHome = document.getElementById('tab-home');
     const tabReview = document.getElementById('tab-review');
     const panelHome = document.getElementById('panel-home');
     const panelReview = document.getElementById('panel-review');
 
-    // '홈' 탭 클릭 시
-    tabHome.addEventListener('click', function(e) {
-        e.preventDefault(); // 링크 기본 동작(페이지 이동) 방지
+    if(tabHome && tabReview && panelHome && panelReview) {
+        tabHome.addEventListener('click', function(e) {
+            e.preventDefault();
+            panelHome.style.display = 'block';
+            panelReview.style.display = 'none';
+            tabHome.classList.add('active');
+            tabReview.classList.remove('active');
+        });
 
-        // 패널 보이기/숨기기
-        panelHome.style.display = 'block';
-        panelReview.style.display = 'none';
+        tabReview.addEventListener('click', function(e) {
+            e.preventDefault();
+            panelHome.style.display = 'none';
+            panelReview.style.display = 'block';
+            tabReview.classList.add('active');
+            tabHome.classList.remove('active');
+        });
+    }
 
-        // 탭 활성화 스타일 변경
-        tabHome.classList.add('active');
-        tabReview.classList.remove('active');
-    });
-
-    // '후기' 탭 클릭 시
-    tabReview.addEventListener('click', function(e) {
-        e.preventDefault();
-
-        // 패널 보이기/숨기기
-        panelHome.style.display = 'none';
-        panelReview.style.display = 'block';
-
-        // 탭 활성화 스타일 변경
-        tabReview.classList.add('active');
-        tabHome.classList.remove('active');
-    });
+    // URL 해시(#panel-review)가 있으면 후기 탭 자동 클릭
+    if (window.location.hash === '#panel-review' && tabReview) {
+        tabReview.click();
+    }
 
 
-    // --- 2. 별점 클릭 및 후기 폼 표시 기능 ---
+    // =========================================
+    // 3. 별점 및 리뷰 작성 폼 기능
+    // =========================================
     const reviewStars = document.querySelectorAll('#review-stars span');
     const reviewForm = document.getElementById('review-form');
     const ratingInput = document.getElementById('rating');
 
-    reviewStars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = this.dataset.value; // 클릭한 별의 data-value (1~5)
-            console.log("별점 클릭됨:", rating); // 👈 브라우저 콘솔에서 확인용 로그
-            ratingInput.value = rating;
+    if (reviewStars.length > 0) {
+        reviewStars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.value;
+                if(ratingInput) ratingInput.value = rating;
 
-            // 클릭한 별까지 색상 채우기
-            reviewStars.forEach(s => {
-                if (s.dataset.value <= rating) {
-                    s.innerHTML = '★'; // 채워진 별
-                    s.classList.add('filled');
-                } else {
-                    s.innerHTML = '☆'; // 빈 별
-                    s.classList.remove('filled');
-                }
+                reviewStars.forEach(s => {
+                    if (s.dataset.value <= rating) {
+                        s.innerHTML = '★';
+                        s.classList.add('filled');
+                    } else {
+                        s.innerHTML = '☆';
+                        s.classList.remove('filled');
+                    }
+                });
+                if(reviewForm) reviewForm.style.display = 'block';
             });
-
-            // 별점을 클릭하면 후기 작성 폼을 보여줌
-            reviewForm.style.display = 'block';
         });
-    });
-
-});
-// DOM이 모두 로드되었을 때 스크립트 실행
-document.addEventListener('DOMContentLoaded', function() {
-
-    // --- 1. 탭 전환 기능 ---
-    // ... (기존 탭 전환 코드 ... (생략)) ...
-    const tabHome = document.getElementById('tab-home');
-    const tabReview = document.getElementById('tab-review');
-    const panelHome = document.getElementById('panel-home');
-    const panelReview = document.getElementById('panel-review');
-
-    tabHome.addEventListener('click', function(e) {
-        e.preventDefault();
-        panelHome.style.display = 'block';
-        panelReview.style.display = 'none';
-        tabHome.classList.add('active');
-        tabReview.classList.remove('active');
-    });
-
-    tabReview.addEventListener('click', function(e) {
-        e.preventDefault();
-        panelHome.style.display = 'none';
-        panelReview.style.display = 'block';
-        tabReview.classList.add('active');
-        tabHome.classList.remove('active');
-    });
+    }
 
 
-    // --- 2. 별점 클릭 및 후기 폼 표시 기능 ---
-    // ... (기존 새 리뷰 별점 코드 ... (생략)) ...
-    const reviewStars = document.querySelectorAll('#review-stars span');
-    const reviewForm = document.getElementById('review-form');
-    const ratingInput = document.getElementById('rating');
+    // =========================================
+    // 4. 리뷰 수정 / 삭제 기능
+    // =========================================
 
-    reviewStars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = this.dataset.value;
-            ratingInput.value = rating;
-
-            reviewStars.forEach(s => {
-                if (s.dataset.value <= rating) {
-                    s.innerHTML = '★';
-                    s.classList.add('filled');
-                } else {
-                    s.innerHTML = '☆';
-                    s.classList.remove('filled');
-                }
-            });
-            reviewForm.style.display = 'block';
-        });
-    });
-
-
-    //
-    // ▼▼▼ [이 아래로 코드가 추가되었습니다] ▼▼▼
-    //
-
-    // --- 3. 수정 폼 내부의 별점 클릭 기능 ---
-    // '.edit-stars' 클래스를 가진 모든 별점 세트에 대해 이벤트 리스너 설정
+    // (A) 수정 폼 별점 채우기 로직
     const allEditStars = document.querySelectorAll('.edit-stars');
     allEditStars.forEach(starSet => {
         const stars = starSet.querySelectorAll('span');
         const editForm = starSet.closest('.review-edit-form');
-        const ratingInput = editForm.querySelector('.edit-rating-input');
+        const rInput = editForm.querySelector('.edit-rating-input');
 
-        // 폼이 처음 보일 때, input의 초기 값(th:value)에 따라 별을 채움
-        fillStars(stars, ratingInput.value);
+        fillStars(stars, rInput.value); // 초기값 설정
 
         stars.forEach(star => {
             star.addEventListener('click', function() {
                 const rating = this.dataset.value;
-                ratingInput.value = rating;
+                rInput.value = rating;
                 fillStars(stars, rating);
             });
         });
@@ -151,110 +246,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-    // --- 4. 수정 / 삭제 / 취소 버튼 이벤트 처리 (이벤트 위임 사용) ---
+    // (B) 버튼 이벤트 위임 (삭제, 수정, 취소)
     const reviewList = document.querySelector('.review-list');
-
     if (reviewList) {
         reviewList.addEventListener('click', function(e) {
-
             const reviewItem = e.target.closest('.review-item');
-            if (!reviewItem) return; // 리뷰 아이템 밖에서 클릭한 건 무시
+            if (!reviewItem) return;
 
-            // (1) '삭제' 버튼 클릭 시
-        if (e.target.matches('.btn-delete')) {
-                    // fetch() 대신 form의 기본 동작(submit)을 가로채서 확인창만 띄웁니다.
-                    e.preventDefault();
-
-                    if (confirm('정말 삭제하시겠습니까?')) {
-                        // '확인'을 누르면, 버튼이 속한 <form>을 찾아 제출(submit)시킵니다.
-                        const deleteForm = e.target.closest('form.delete-form');
-                        if (deleteForm) {
-                            deleteForm.submit();
-                        }
-                    }
-                    // '취소'를 누르면 아무 일도 일어나지 않습니다.
+            // 삭제 버튼
+            if (e.target.matches('.btn-delete')) {
+                e.preventDefault();
+                if (confirm('정말 삭제하시겠습니까?')) {
+                    const deleteForm = e.target.closest('form.delete-form');
+                    if (deleteForm) deleteForm.submit();
                 }
+            }
 
-            // (2) '수정' 버튼 클릭 시
+            // 수정 버튼
             if (e.target.matches('.btn-edit')) {
                 e.preventDefault();
                 const displayArea = reviewItem.querySelector('.review-display');
                 const editForm = reviewItem.querySelector('.review-edit-form');
 
-                // 기존 내용 숨기고, 수정 폼 보여주기
                 displayArea.style.display = 'none';
                 editForm.style.display = 'block';
 
-                // 폼이 보일 때 현재 별점으로 다시 채워줌 (필수)
-                const ratingInput = editForm.querySelector('.edit-rating-input');
+                // 별점 다시 그리기
+                const rInput = editForm.querySelector('.edit-rating-input');
                 const stars = editForm.querySelectorAll('.edit-stars span');
-                fillStars(stars, ratingInput.value);
+                fillStars(stars, rInput.value);
             }
 
-            // (3) '취소' 버튼 클릭 시
+            // 취소 버튼
             if (e.target.matches('.btn-edit-cancel')) {
                 e.preventDefault();
                 const displayArea = reviewItem.querySelector('.review-display');
                 const editForm = reviewItem.querySelector('.review-edit-form');
 
-                // 수정 폼 숨기고, 기존 내용 보여주기
                 editForm.style.display = 'none';
                 displayArea.style.display = 'block';
             }
-
-            // (4) '수정 완료' (제출) 버튼은 <form>의 기본 submit 이벤트를 사용합니다.
-            // (fetch를 사용하려면 e.preventDefault() 후 btn-edit-save 클릭을 잡아야 함)
         });
     }
-    if (window.location.hash === '#panel-review') {
-            // '후기' 탭(id='tab-review')을 찾아서 강제로 click() 이벤트를 실행
-            const reviewTab = document.getElementById('tab-review');
-            if (reviewTab) {
-                reviewTab.click();
-            }
-        }
 
 
-
-});
-    //리뷰정렬
-     function changeSort(sortType) {
-         // 현재 URL에서 쿼리 파라미터 조작
-         const urlParams = new URLSearchParams(window.location.search);
-
-         // storeId 등 기존 파라미터는 유지하고 sort만 변경
-         urlParams.set('sort', sortType);
-
-         // 탭 상태 유지를 위해 hash(#panel-review)도 유지하면 좋음
-        window.location.href = window.location.pathname + '?' + urlParams.toString() + '#panel-review';
-     }
-// 삭제할 이미지 경로를 저장할 배열 (또는 폼 내부에 hidden input 생성)
-function removeExistingPhoto(button, photoUrl) {
-    if (!confirm("이 사진을 삭제하시겠습니까?")) return;
-
-    // 1. 화면에서 사진 요소 제거
-    const container = button.parentElement;
-    const form = container.closest('form');
-    container.style.display = 'none';
-
-    // 2. 서버로 전송할 '삭제 대상 리스트'에 추가
-    // hidden input을 생성하여 삭제할 파일의 URL이나 ID를 담아 전송합니다.
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = 'deletedPhotos'; // 서버 컨트롤러에서 받을 파라미터명
-    hiddenInput.value = photoUrl;
-
-    form.querySelector('.deleted-photos-container').appendChild(hiddenInput);
-}
-// --- 5. 사진 미리보기 기능 추가 ---
-
-    // 공통 미리보기 처리 함수
+    // =========================================
+    // 5. 이미지 미리보기 기능 (통합)
+    // =========================================
     function handleImagePreview(input, previewContainer) {
         if (!input || !previewContainer) return;
 
         input.addEventListener('change', function(e) {
-            previewContainer.innerHTML = ''; // 기존 미리보기 초기화
+            previewContainer.innerHTML = '';
             const files = Array.from(e.target.files);
 
             files.forEach(file => {
@@ -270,15 +313,40 @@ function removeExistingPhoto(button, photoUrl) {
         });
     }
 
-    // (1) 새 리뷰 등록 폼 미리보기
-    const addPhotosInput = document.getElementById('photos');
-    const addPreviewContainer = document.getElementById('image-preview');
-    handleImagePreview(addPhotosInput, addPreviewContainer);
+    // 새 리뷰 폼 미리보기
+    handleImagePreview(document.getElementById('photos'), document.getElementById('image-preview'));
 
-    // (2) 리뷰 수정 폼 미리보기 (여러 개일 수 있으므로 반복문 처리)
-    const editForms = document.querySelectorAll('.review-edit-form');
-    editForms.forEach(form => {
-        const editInput = form.querySelector('.edit-photos-input');
-        const editPreview = form.querySelector('.edit-image-preview');
-        handleImagePreview(editInput, editPreview);
+    // 수정 폼 미리보기 (여러 개)
+    document.querySelectorAll('.review-edit-form').forEach(form => {
+        handleImagePreview(form.querySelector('.edit-photos-input'), form.querySelector('.edit-image-preview'));
     });
+
+}); // DOMContentLoaded 끝
+
+
+// =========================================
+// 6. 전역 함수 (HTML inline 호출용)
+// =========================================
+
+// 리뷰 정렬
+function changeSort(sortType) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('sort', sortType);
+    window.location.href = window.location.pathname + '?' + urlParams.toString() + '#panel-review';
+}
+
+// 기존 사진 삭제 (수정 시)
+function removeExistingPhoto(button, photoUrl) {
+    if (!confirm("이 사진을 삭제하시겠습니까?")) return;
+
+    const container = button.parentElement;
+    const form = container.closest('form');
+    container.style.display = 'none';
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'deletedPhotos';
+    hiddenInput.value = photoUrl;
+
+    form.querySelector('.deleted-photos-container').appendChild(hiddenInput);
+}

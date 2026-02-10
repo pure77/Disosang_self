@@ -25,9 +25,12 @@
     <main class="detail-content">
 
         <div class="photo-placeholder">
-            <span th:if="${store.thumbnailUrl == null}">📷</span>
-            <img th:if="${store.thumbnailUrl != null}" th:src="${store.thumbnailUrl}" alt="가게 이미지">
-            <p th:if="${store.thumbnailUrl == null}">장소 정보를 사진으로 알려주세요.</p>
+            <div id="photo-grid" class="photo-grid"></div>
+
+            <div id="no-photo-text" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                <span style="font-size: 40px;">📷</span>
+                <p style="color: #aaa; margin-top: 10px;">장소 정보를 사진으로 알려주세요.</p>
+            </div>
         </div>
 
         <nav class="content-tabs">
@@ -199,6 +202,26 @@
         <span class="label">내 정보</span>
     </a>
 </nav>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var reviewPhotoList = [];
+
+    /*[# th:each="review : ${reviews}"]*/
+        /*[# th:if="${not #lists.isEmpty(review.photoUrls)}"]*/
+            /*[# th:each="photoUrl : ${review.photoUrls}"]*/
+                reviewPhotoList.push([[${photoUrl}]]);
+            /*[/]*/
+        /*[/]*/
+    /*[/]*/
+    /*]]>*/
+</script>
+
+<span class="close-modal">&times;</span>
+<div id="imageModal" class="modal">
+    <a class="modal-nav prev">&#10094;</a>
+    <img class="modal-content" id="fullImage">
+    <a class="modal-nav next">&#10095;</a>
+</div>
 
 <script src="/js/detail.js" defer></script>
 </body>
