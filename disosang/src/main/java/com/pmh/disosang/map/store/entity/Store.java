@@ -41,10 +41,10 @@ public class Store {
     @Column(length = 20)
     private String phone;
 
-    @Column(name = "x")
+    @Column(name = "lon")
     private Double x;  // 경도 (longitude)
 
-    @Column(name = "y")
+    @Column(name = "lat")
     private Double y;  // 위도 (latitude)
 
     @Column(name = "created_at", updatable = false)

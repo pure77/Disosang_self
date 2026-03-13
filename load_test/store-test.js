@@ -11,7 +11,7 @@ export const options = {
       startVUs: 0,
       stages: [
         { duration: '30s', target: 100 }, // 30초 동안 100명까지 증가
-        { duration: '1m', target: 100 },  // 1분간 유지 (High Load)
+        { duration: '1m', target: 100},  // 1분간 유지 (High Load)
         { duration: '30s', target: 0 },  // 종료
       ],
       gracefulRampDown: '10s',
@@ -85,6 +85,6 @@ export default function () {
 // 이 부분을 스크립트 맨 아래에 추가하세요
 export function handleSummary(data) {
   return {
-    "./load_test/summary_FTS.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
+    "./load_test/summary_100FTS2.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
   };
 }
