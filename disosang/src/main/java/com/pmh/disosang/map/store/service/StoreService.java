@@ -1,6 +1,5 @@
 package com.pmh.disosang.map.store.service;
 
-
 import com.pmh.disosang.map.store.CategoryRepository;
 import com.pmh.disosang.map.store.StoreRepository;
 import com.pmh.disosang.map.store.dto.response.StoreResponse;
@@ -31,10 +30,41 @@ public class StoreService {
             return List.of();
         }
 
-        List<Store> stores = new ArrayList<>();
-        List<Long> rootCategoryIds = categoryRepository.findCategoryIdsByExactName(normalizedKeyword);
+        List<Long> nearbyStoreIds = storeRepository.findNearbyStoreIds(minLat, maxLat, minLng, maxLng);
+        if (nearbyStoreIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Store> stores = List.of();
+        List<Long> categoryIds = getExpandedCategoryIds(normalizedKeyword);
+
+        if (!categoryIds.isEmpty()) {
+            stores = storeRepository.findNearbyStoresByCategoryIdsOrderedByDistance(
+                    nearbyStoreIds,
+                    categoryIds,
+                    centerLat,
+                    centerLng
+            );
+        }
+
+        if (stores.isEmpty()) {
+            stores = storeRepository.findNearbyStoresByKeywordOrderedByDistance(
+                    nearbyStoreIds,
+                    normalizedKeyword,
+                    centerLat,
+                    centerLng
+            );
+        }
+
+        return stores.stream()
+                .map(StoreResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    private List<Long> getExpandedCategoryIds(String keyword) {
+        List<Long> rootCategoryIds = categoryRepository.findCategoryIdsByExactName(keyword);
         if (rootCategoryIds.isEmpty()) {
-            rootCategoryIds = categoryRepository.findCategoryIdsByKeyword(normalizedKeyword);
+            rootCategoryIds = categoryRepository.findCategoryIdsByKeyword(keyword);
         }
 
         Set<Long> categoryIds = new LinkedHashSet<>();
@@ -42,44 +72,12 @@ public class StoreService {
             categoryIds.addAll(categoryRepository.findAllDescendantIds(rootId));
         }
 
-        if (!categoryIds.isEmpty()) {
-            stores = storeRepository.findStoresInAreaByCategoryIdsOrderedByDistance(
-                    new ArrayList<>(categoryIds),
-                    centerLat,
-                    centerLng,
-                    minLat,
-                    maxLat,
-                    minLng,
-                    maxLng
-            );
-        }
-
-        if (stores.isEmpty()) {
-            stores = storeRepository.findStoresInAreaByKeywordOrderedByDistance(
-                    normalizedKeyword,
-                    centerLat,
-                    centerLng,
-                    minLat,
-                    maxLat,
-                    minLng,
-                    maxLng
-            );
-        }
-
-        if (stores.isEmpty()) {
-            stores = storeRepository.findStoresByKeyword(normalizedKeyword, centerLat, centerLng);
-        }
-
-        return stores.stream()
-                .map(StoreResponse::fromEntity)
-                .collect(Collectors.toList());
-
+        return new ArrayList<>(categoryIds);
     }
-
     @Transactional(readOnly = true)
     public StoreResponse findById(long storeId) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("IDø° «ÿ¥Á«œ¥¬ ∞°∞‘∞° æ¯Ω¿¥œ¥Ÿ"));
+                .orElseThrow(() -> new IllegalArgumentException("IDÎ•º Ï∞æÏùÑÏàò ÏóÜÏäµÎãàÎã§"));
 
         return StoreResponse.fromEntity(store);
     }

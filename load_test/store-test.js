@@ -2,6 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.1.0/index.js';
 // 테스트 설정
 export const options = {
   scenarios: {
@@ -85,6 +86,7 @@ export default function () {
 // 이 부분을 스크립트 맨 아래에 추가하세요
 export function handleSummary(data) {
   return {
-    "./load_test/summary_100FTS2.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
+    "./load_test/summary_100FTSv2-3.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
   };
 }
