@@ -54,12 +54,12 @@ export default function () {
 
   const params = {
     keyword: randomItem(KEYWORDS), // 랜덤 키워드 선택
-    centerLat: currentLat,
-    centerLng: currentLng,
-    minLat: currentLat - delta,
-    maxLat: currentLat + delta,
-    minLng: currentLng - delta,
-    maxLng: currentLng + delta,
+    centerY: currentLat,
+    centerX: currentLng,
+    minY: currentLat - delta,
+    maxY: currentLat + delta,
+    minX: currentLng - delta,
+    maxX: currentLng + delta,
     // categoryIds: [1, 2] // 필요하다면 카테고리 ID도 랜덤하게 추가 가능
   };
 
@@ -87,6 +87,6 @@ export default function () {
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
-    "./load_test/summary_100FTSv2-3.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
+    "./load_test/summary_100FTSv2-6.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
   };
 }
