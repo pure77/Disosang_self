@@ -2,24 +2,32 @@ package com.pmh.disosang.review.entity;
 
 import com.pmh.disosang.map.store.entity.Store;
 import com.pmh.disosang.user.entity.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "review") // DB 테이블 이름
+@Table(name = "review")
 @Getter
 @Setter
 @NoArgsConstructor
-//@EntityListeners(AuditingEntityListener.class)
 public class Review {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
@@ -30,28 +38,32 @@ public class Review {
 
     private String content;
 
-    @CreatedDate
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Review(N)가 Store(1)에 속함 양방향
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    // Review(N)가 User(1)에 속함 단방향
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // (User 엔티티 필요)
+    private User user;
 
-    // Review(1)가 Photo(N)를 가짐
-    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
 
-    public void update(String newContent, int newRating,LocalDateTime newTime) {
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+    }
+
+    public void update(String newContent, int newRating) {
         this.content = newContent;
         this.rating = newRating;
-        this.createdAt =newTime;
+        this.updatedAt = LocalDateTime.now();
     }
-    // ... (Getter, Setter, 생성자 등)
 }

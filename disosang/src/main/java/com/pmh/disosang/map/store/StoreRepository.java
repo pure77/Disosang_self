@@ -17,26 +17,37 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Optional<Store> findByStoreId(Long storeId);
 
     @Query(value = """
-        SELECT s.store_id
-        FROM store s
-        WHERE MBRContains(
-            ST_GeomFromText(
-                CONCAT(
-                    'POLYGON((',
-                    :minLng, ' ', :minLat, ',',
-                    :maxLng, ' ', :minLat, ',',
-                    :maxLng, ' ', :maxLat, ',',
-                    :minLng, ' ', :maxLat, ',',
-                    :minLng, ' ', :minLat,
-                    '))'
+        WITH nearby AS (
+            SELECT /*+ MATERIALIZATION */
+                   s.store_id, s.lon, s.lat
+            FROM store s FORCE INDEX (spx_store_location)
+            WHERE MBRContains(
+                ST_GeomFromText(
+                    CONCAT(
+                        'POLYGON((',
+                        :minLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :minLat,
+                        '))'
+                    ),
+                    4326,
+                    'axis-order=long-lat'
                 ),
-                4326,
-                'axis-order=long-lat'
-            ),
-            s.location
+                s.location
+            )
         )
+        SELECT s.*
+        FROM nearby n
+        JOIN store s ON s.store_id = n.store_id
+        WHERE s.place_name_search = :qSearch
+        ORDER BY ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)), s.store_id
     """, nativeQuery = true)
-    List<Long> findNearbyStoreIds(
+    List<Store> findExactNameStoresOrderedByDistance(
+            @Param("qSearch") String qSearch,
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
             @Param("minLat") double minLat,
             @Param("maxLat") double maxLat,
             @Param("minLng") double minLng,
@@ -45,34 +56,214 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     @Query(value = """
         SELECT s.*
-        FROM store s
-        WHERE s.store_id IN (:nearbyStoreIds)
-          AND s.category_id IN (:categoryIds)
+        FROM store s FORCE INDEX (idx_store_place_search)
+        WHERE s.place_name_search = :qSearch
         ORDER BY ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)), s.store_id
     """, nativeQuery = true)
-    List<Store> findNearbyStoresByCategoryIdsOrderedByDistance(
-            @Param("nearbyStoreIds") List<Long> nearbyStoreIds,
-            @Param("categoryIds") List<Long> categoryIds,
+    List<Store> findExactNameStoresGloballyOrderedByDistance(
+            @Param("qSearch") String qSearch,
             @Param("centerLat") double centerLat,
             @Param("centerLng") double centerLng
     );
 
     @Query(value = """
+        WITH nearby AS (
+            SELECT /*+ MATERIALIZATION */
+                   s.store_id, s.lon, s.lat
+            FROM store s FORCE INDEX (spx_store_location)
+            WHERE MBRContains(
+                ST_GeomFromText(
+                    CONCAT(
+                        'POLYGON((',
+                        :minLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :minLat,
+                        '))'
+                    ),
+                    4326,
+                    'axis-order=long-lat'
+                ),
+                s.location
+            )
+        ),
+        hits AS (
+            SELECT s.store_id, 120 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_place_search) ON s.store_id = n.store_id
+            WHERE s.place_name_search LIKE CONCAT(:qSearch, '%')
+
+            UNION ALL
+
+            SELECT s.store_id, 40 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_store_type_search) ON s.store_id = n.store_id
+            WHERE s.store_type_search LIKE CONCAT(:qSearch, '%')
+
+            UNION ALL
+
+            SELECT s.store_id, 20 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_category_id) ON s.store_id = n.store_id
+            WHERE s.category_id IN (:categoryIds)
+        ),
+        best_hit AS (
+            SELECT store_id, MAX(score) AS score
+            FROM hits
+            GROUP BY store_id
+        )
         SELECT s.*
-        FROM store s
-        WHERE s.store_id IN (:nearbyStoreIds)
-          AND MATCH (
-              s.place_name,
-              s.address_name,
-              s.road_address_name,
-              s.store_type
-          ) AGAINST (:keyword IN NATURAL LANGUAGE MODE)
-        ORDER BY ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)), s.store_id
+        FROM best_hit b
+        JOIN store s ON s.store_id = b.store_id
+        ORDER BY
+            b.score DESC,
+            ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)),
+            s.store_id
+        LIMIT 50
     """, nativeQuery = true)
-    List<Store> findNearbyStoresByKeywordOrderedByDistance(
-            @Param("nearbyStoreIds") List<Long> nearbyStoreIds,
-            @Param("keyword") String keyword,
+    List<Store> findNearbyStoresByShortKeywordOrderedByScore(
+            @Param("qSearch") String qSearch,
+            @Param("categoryIds") List<Long> categoryIds,
             @Param("centerLat") double centerLat,
-            @Param("centerLng") double centerLng
+            @Param("centerLng") double centerLng,
+            @Param("minLat") double minLat,
+            @Param("maxLat") double maxLat,
+            @Param("minLng") double minLng,
+            @Param("maxLng") double maxLng
+    );
+
+    @Query(value = """
+        WITH nearby AS (
+            SELECT /*+ MATERIALIZATION */
+                   s.store_id, s.lon, s.lat
+            FROM store s FORCE INDEX (spx_store_location)
+            WHERE MBRContains(
+                ST_GeomFromText(
+                    CONCAT(
+                        'POLYGON((',
+                        :minLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :minLat,
+                        '))'
+                    ),
+                    4326,
+                    'axis-order=long-lat'
+                ),
+                s.location
+            )
+        ),
+        hits AS (
+            SELECT s.store_id, 1000 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_place_search) ON s.store_id = n.store_id
+            WHERE s.place_name_search = :qSearch
+
+            UNION ALL
+
+            SELECT s.store_id, 350 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_place_search) ON s.store_id = n.store_id
+            WHERE s.place_name_search LIKE CONCAT(:qSearch, '%')
+
+            UNION ALL
+
+            SELECT s.store_id, 90 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_store_type_search) ON s.store_id = n.store_id
+            WHERE s.store_type_search = :qSearch
+
+            UNION ALL
+
+            SELECT s.store_id, 45 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_store_type_search) ON s.store_id = n.store_id
+            WHERE s.store_type_search LIKE CONCAT(:qSearch, '%')
+
+            UNION ALL
+
+            SELECT s.store_id, 80 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_category_id) ON s.store_id = n.store_id
+            WHERE s.category_id IN (:categoryIds)
+
+            UNION ALL
+
+            SELECT s.store_id, 25 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_road_address_search) ON s.store_id = n.store_id
+            WHERE s.road_address_search LIKE CONCAT(:qSearch, '%')
+
+            UNION ALL
+
+            SELECT s.store_id, 18 AS score
+            FROM nearby n
+            JOIN store s FORCE INDEX (idx_store_address_search) ON s.store_id = n.store_id
+            WHERE s.address_search LIKE CONCAT(:qSearch, '%')
+        ),
+        best_hit AS (
+            SELECT store_id, MAX(score) AS score
+            FROM hits
+            GROUP BY store_id
+        )
+        SELECT s.*
+        FROM best_hit b
+        JOIN store s ON s.store_id = b.store_id
+        ORDER BY
+            b.score DESC,
+            s.review_count DESC,
+            ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)),
+            s.store_id
+        LIMIT 50
+    """, nativeQuery = true)
+    List<Store> findNearbyStoresByKeywordOrderedByScore(
+            @Param("qSearch") String qSearch,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
+            @Param("minLat") double minLat,
+            @Param("maxLat") double maxLat,
+            @Param("minLng") double minLng,
+            @Param("maxLng") double maxLng
+    );
+
+    @Query(value = """
+        WITH nearby AS (
+            SELECT /*+ MATERIALIZATION */
+                   s.store_id, s.lon, s.lat
+            FROM store s FORCE INDEX (spx_store_location)
+            WHERE MBRContains(
+                ST_GeomFromText(
+                    CONCAT(
+                        'POLYGON((',
+                        :minLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :minLat,
+                        '))'
+                    ),
+                    4326,
+                    'axis-order=long-lat'
+                ),
+                s.location
+            )
+        )
+        SELECT s.*
+        FROM nearby n
+        JOIN store s ON s.store_id = n.store_id
+        ORDER BY ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)), s.store_id
+        LIMIT :limitCount
+    """, nativeQuery = true)
+    List<Store> findNearbyStoresForFuzzyMatching(
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
+            @Param("minLat") double minLat,
+            @Param("maxLat") double maxLat,
+            @Param("minLng") double minLng,
+            @Param("maxLng") double maxLng,
+            @Param("limitCount") int limitCount
     );
 }
