@@ -28,8 +28,9 @@ export const options = {
 
 // 검색어 목록 (데이터 분포에 따라 다양하게 구성)
 const KEYWORDS = [
-  '카페', '음식', '약국', '편의점', '이디야',
-  '병원', '마트', '식당', '김밥', '은행'
+  '카페','천안역 카페','신부동 음식점', '음식', '약국', '편의점', '이디야',
+  '병원','신부동 병원' ,'마트', '식당', '김밥', '은행','병','복','정','카','형복',
+  '이디아','싱클','형복싱클럽','커피피메라13'
 ];
 
 // 기준 좌표 (천안/아산 부근으로 추정됨 - 예시 좌표 기반)
@@ -87,6 +88,6 @@ export default function () {
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
-    "./load_test/summary_100FTSv2-6.html": htmlReport(data), // load_test 폴더 안에 summary.html로 저장
+    "load_test/summary_100FTSv3-2.html": htmlReport(data),
   };
 }
