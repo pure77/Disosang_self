@@ -28,3 +28,17 @@
 - 테스트, 빌드, 마이그레이션, 스크립트 실행이 필요하면 실행 전에 목적과 범위를 먼저 설명한다.
 - 데이터베이스 스키마, 인덱스, 배포 설정, 보안 설정처럼 영향 범위가 큰 변경은 반드시 사전 확인을 받는다.
 - 답변과 설명은 항상 한국어로 작성한다.
+
+## Agent skills
+
+### Issue tracker
+
+이슈는 `.scratch/` 폴더 아래 마크다운 파일로 관리합니다. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+기본 트리아지 라벨 어휘(needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix)를 사용합니다. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+단일 컨텍스트 구조 — 루트의 `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.

@@ -356,4 +356,42 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
             @Param("minLng") double minLng,
             @Param("maxLng") double maxLng
     );
+
+    @Query(value = """
+        WITH nearby AS (
+            SELECT /*+ MATERIALIZATION */
+                   s.store_id, s.lon, s.lat
+            FROM store s FORCE INDEX (spx_store_location)
+            WHERE MBRContains(
+                ST_GeomFromText(
+                    CONCAT(
+                        'POLYGON((',
+                        :minLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :minLat, ',',
+                        :maxLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :maxLat, ',',
+                        :minLng, ' ', :minLat,
+                        '))'
+                    ),
+                    4326,
+                    'axis-order=long-lat'
+                ),
+                s.location
+            )
+        )
+        SELECT s.*
+        FROM nearby n
+        JOIN store s ON s.store_id = n.store_id
+        ORDER BY ST_Distance_Sphere(point(:centerLng, :centerLat), point(s.lon, s.lat)), s.store_id
+        LIMIT :limitCount
+    """, nativeQuery = true)
+    List<Store> findNearbyStoresForFuzzyMatching(
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
+            @Param("minLat") double minLat,
+            @Param("maxLat") double maxLat,
+            @Param("minLng") double minLng,
+            @Param("maxLng") double maxLng,
+            @Param("limitCount") int limitCount
+    );
 }

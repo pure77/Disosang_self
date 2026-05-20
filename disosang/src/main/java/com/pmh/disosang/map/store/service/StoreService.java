@@ -39,6 +39,8 @@ public class StoreService {
      */
     private static final int TOKEN_SCORE_MAX = 320;
 
+    private static final int FUZZY_CANDIDATE_LIMIT = 150;
+
     private static final String STORE_TYPE_CHEAP = "cheap";
     private static final String STORE_TYPE_TRADITIONAL_MARKET = "tm";
 
@@ -177,7 +179,14 @@ public class StoreService {
         );
 
         /*
-         * 9. 최종 DTO 변환
+         * 9. 결과가 없고 3자 이상 일반 키워드면 레벤슈타인 오타 보정 fallback
+         */
+        if (rankedStores.isEmpty() && compactKeyword.length() >= 3 && !storeTypeAliasKeyword) {
+            rankedStores = findFuzzyMatches(compactKeyword, centerLat, centerLng, minLat, maxLat, minLng, maxLng);
+        }
+
+        /*
+         * 10. 최종 DTO 변환
          */
         return toResponses(rankedStores);
     }
@@ -444,6 +453,52 @@ public class StoreService {
                 .limit(FINAL_RESULT_LIMIT)
                 .map(StoreResponse::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    private List<Store> findFuzzyMatches(String compactKeyword, double centerLat, double centerLng,
+                                         double minLat, double maxLat, double minLng, double maxLng) {
+        int maxDistance = Math.max(1, Math.min(2, compactKeyword.length() / 3));
+        return storeRepository.findNearbyStoresForFuzzyMatching(
+                        centerLat, centerLng, minLat, maxLat, minLng, maxLng,
+                        FUZZY_CANDIDATE_LIMIT
+                ).stream()
+                .filter(store -> isFuzzyCandidate(store, compactKeyword, maxDistance))
+                .sorted(Comparator
+                        .comparingInt((Store store) -> levenshteinDistance(compactKeyword, compactKeyword(store.getPlaceName())))
+                        .thenComparing(Store::getStoreId))
+                .limit(10)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isFuzzyCandidate(Store store, String compactKeyword, int maxDistance) {
+        String compactName = compactKeyword(store.getPlaceName());
+        if (compactName.isBlank()) {
+            return false;
+        }
+        if (Math.abs(compactName.length() - compactKeyword.length()) > maxDistance) {
+            return false;
+        }
+        return levenshteinDistance(compactKeyword, compactName) <= maxDistance;
+    }
+
+    private int levenshteinDistance(String source, String target) {
+        int[][] dp = new int[source.length() + 1][target.length() + 1];
+        for (int i = 0; i <= source.length(); i++) {
+            dp[i][0] = i;
+        }
+        for (int j = 0; j <= target.length(); j++) {
+            dp[0][j] = j;
+        }
+        for (int i = 1; i <= source.length(); i++) {
+            for (int j = 1; j <= target.length(); j++) {
+                int cost = source.charAt(i - 1) == target.charAt(j - 1) ? 0 : 1;
+                dp[i][j] = Math.min(
+                        Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1),
+                        dp[i - 1][j - 1] + cost
+                );
+            }
+        }
+        return dp[source.length()][target.length()];
     }
 
     @Transactional(readOnly = true)
