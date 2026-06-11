@@ -190,10 +190,13 @@ body {
 
 /* 하단 내비게이션 바 */
 .bottom-nav {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    max-width: 420px; /* 폰 프레임 폭에 맞춰 가운데 정렬 (다른 화면과 동일) */
+    margin: auto;
     display: flex;
     background-color: #ffffff;
     border-top: 1px solid #f0f1f5;
