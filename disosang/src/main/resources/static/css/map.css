@@ -155,6 +155,11 @@ body {
     width: auto;
     padding: 5px 0;
 }
+/* display:flex 가 [hidden] 기본값(display:none)을 덮어써서 목록이 안 숨던 문제 해결 */
+.sheet-list[hidden],
+.sheet-info[hidden] {
+    display: none;
+}
 .store-item {
     padding: 12px 5px;
     border-bottom: 1px solid #f0f1f5;
@@ -192,7 +197,7 @@ body {
     display: flex;
     background-color: #ffffff;
     border-top: 1px solid #f0f1f5;
-    padding: 8px 0;
+    padding: 5px 0;
     z-index: 20;
 }
 .nav-item {
@@ -205,12 +210,12 @@ body {
     color: #0075ff;
 }
 .nav-item .icon {
-    font-size: 24px;
+    font-size: 21px;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 .nav-item .label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
 }
 

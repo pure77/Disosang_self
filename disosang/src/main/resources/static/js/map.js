@@ -362,7 +362,8 @@ function showStores() {
         item.className = 'store-item';
         item.innerHTML = `<strong>${store.placeName}</strong><br><small>${store.addressName}</small>`;
         item.addEventListener('click', () => {
-            window.location.href = '/store/detail/' + store.id;
+            map.setCenter(position);
+            showStoreInfoInSheet(store);
         });
         listDiv.appendChild(item);
     });
