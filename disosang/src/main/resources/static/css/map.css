@@ -89,20 +89,22 @@ body {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 56px; /* 하단 네비게이션 높이 */
-    height: 78vh;
+    bottom: var(--nav-h, 60px); /* 실제 하단 네비게이션 높이(JS에서 측정) */
+    height: 0;
+    overflow: hidden;
     background: #fff;
     border-radius: 18px 18px 0 0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
     z-index: 8;
     display: flex;
     flex-direction: column;
-    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition: height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.bottom-sheet.hidden     { transform: translateY(calc(100% + 56px)); }
-.bottom-sheet.expanded   { transform: translateY(0); }
-.bottom-sheet.half       { transform: translateY(38vh); }
-.bottom-sheet.collapsed  { transform: translateY(calc(78vh - 110px)); }
+/* 시트는 바텀 네비 위에 고정되고, 스냅은 높이로 제어(위로 자람) → 내비가 콘텐츠를 가리지 않음 */
+.bottom-sheet.hidden     { height: 0; }
+.bottom-sheet.collapsed  { height: 96px; }
+.bottom-sheet.half       { height: 42vh; }
+.bottom-sheet.expanded   { height: calc(100vh - 200px); }
 
 .sheet-handle {
     flex: 0 0 auto;

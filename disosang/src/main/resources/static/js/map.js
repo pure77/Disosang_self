@@ -17,9 +17,15 @@ const sheetHandle = document.getElementById('sheetHandle');
 const sheetListEl = document.getElementById('sheetList');
 const sheetInfoEl = document.getElementById('sheetInfo');
 
+// 시트 바닥을 실제 바텀 네비 높이 위에 고정 (--nav-h)
+const navEl = document.querySelector('.bottom-nav');
+if (navEl) {
+    document.documentElement.style.setProperty('--nav-h', navEl.offsetHeight + 'px');
+}
+
 function setSheetState(state) {
     bottomSheet.classList.remove('hidden', 'expanded', 'half', 'collapsed');
-    bottomSheet.style.transform = '';
+    bottomSheet.style.height = '';
     bottomSheet.classList.add(state);
 }
 
@@ -467,44 +473,36 @@ document.getElementById('locBtn').addEventListener('click', function () {
     }
 });
 
-// 바텀시트 드래그(카카오맵식 3단 스냅)
-function vh(percent) {
-    return window.innerHeight * percent / 100;
-}
-
-function snapOffsets() {
+// 바텀시트 드래그(카카오맵식 3단 스냅) — 높이 기반(바닥은 네비 위에 고정)
+function snapHeights() {
     return [
-        { state: 'expanded', y: 0 },
-        { state: 'half', y: vh(38) },
-        { state: 'collapsed', y: vh(78) - 110 }
+        { state: 'collapsed', h: 96 },
+        { state: 'half', h: window.innerHeight * 0.42 },
+        { state: 'expanded', h: window.innerHeight - 200 }
     ];
-}
-
-function currentOffsetY() {
-    const match = snapOffsets().find((s) => bottomSheet.classList.contains(s.state));
-    return match ? match.y : 0;
 }
 
 let sheetDragging = false;
 let sheetStartY = 0;
-let sheetStartOffset = 0;
-let sheetCurrentOffset = 0;
+let sheetStartHeight = 0;
+let sheetCurrentHeight = 0;
 
 sheetHandle.addEventListener('pointerdown', function (e) {
     sheetDragging = true;
     sheetStartY = e.clientY;
-    sheetStartOffset = currentOffsetY();
-    sheetCurrentOffset = sheetStartOffset;
+    sheetStartHeight = bottomSheet.getBoundingClientRect().height;
+    sheetCurrentHeight = sheetStartHeight;
     bottomSheet.style.transition = 'none';
     sheetHandle.setPointerCapture(e.pointerId);
 });
 
 sheetHandle.addEventListener('pointermove', function (e) {
     if (!sheetDragging) return;
-    const maxY = vh(78) - 110;
-    const delta = e.clientY - sheetStartY;
-    sheetCurrentOffset = Math.min(Math.max(sheetStartOffset + delta, 0), maxY);
-    bottomSheet.style.transform = `translateY(${sheetCurrentOffset}px)`;
+    const minH = 96;
+    const maxH = window.innerHeight - 160;
+    // 위로 끌면(clientY 감소) 시트 높이 증가
+    sheetCurrentHeight = Math.min(Math.max(sheetStartHeight + (sheetStartY - e.clientY), minH), maxH);
+    bottomSheet.style.height = sheetCurrentHeight + 'px';
 });
 
 sheetHandle.addEventListener('pointerup', function (e) {
@@ -514,17 +512,17 @@ sheetHandle.addEventListener('pointerup', function (e) {
     sheetHandle.releasePointerCapture(e.pointerId);
 
     // 거의 안 움직였으면 탭으로 간주: collapsed <-> half 토글
-    if (Math.abs(sheetCurrentOffset - sheetStartOffset) < 5) {
-        const cur = snapOffsets().find((s) => bottomSheet.classList.contains(s.state));
+    if (Math.abs(sheetCurrentHeight - sheetStartHeight) < 5) {
+        const cur = snapHeights().find((s) => bottomSheet.classList.contains(s.state));
         setSheetState(cur && cur.state === 'collapsed' ? 'half' : 'collapsed');
         return;
     }
 
-    // 가장 가까운 스냅으로 고정
-    let nearest = snapOffsets()[0];
+    // 가장 가까운 스냅 높이로 고정
+    let nearest = snapHeights()[0];
     let best = Infinity;
-    snapOffsets().forEach(function (o) {
-        const d = Math.abs(o.y - sheetCurrentOffset);
+    snapHeights().forEach(function (o) {
+        const d = Math.abs(o.h - sheetCurrentHeight);
         if (d < best) {
             best = d;
             nearest = o;
