@@ -390,7 +390,7 @@ function createInfoWindowContent(store) {
 
     return `
     <div class="infowindow-wrap">
-        <div class="close-btn" onclick="closeInfoWindow()">×</div>
+        <div class="close-btn">×</div>
 
         <div class="info-header">
             <div class="text-content">
