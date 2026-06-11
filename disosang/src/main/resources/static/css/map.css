@@ -3,13 +3,21 @@
 body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f0f1f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     overflow: hidden;
 }
 
 .container {
     position: relative;
     width: 100%;
+    max-width: 420px;
     height: 100vh;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #map {
@@ -76,23 +84,58 @@ body {
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 검색 결과 사이드바 */
-.result-sidebar {
+/* 바텀시트 (언더바) */
+.bottom-sheet {
     position: absolute;
-    top: 0;
     left: 0;
-    width: 350px;
-    height: calc(100% - 70px);
-    background-color: rgba(255, 255, 255, 0.98);
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 5;
+    right: 0;
+    bottom: 56px; /* 하단 네비게이션 높이 */
+    height: 78vh;
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 8;
     display: flex;
     flex-direction: column;
-    padding: 15px;
-    box-sizing: border-box;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.result-sidebar h3 {
-    margin: 0 0 15px 0;
+.bottom-sheet.hidden     { transform: translateY(calc(100% + 56px)); }
+.bottom-sheet.expanded   { transform: translateY(0); }
+.bottom-sheet.half       { transform: translateY(38vh); }
+.bottom-sheet.collapsed  { transform: translateY(calc(78vh - 110px)); }
+
+.sheet-handle {
+    flex: 0 0 auto;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none; /* 손잡이에서만 스크롤 제스처 차단 */
+}
+.sheet-handle .grip {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: #d0d3da;
+}
+
+.sheet-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 15px 15px;
+}
+.sheet-list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.sheet-list h3 {
+    margin: 0 0 12px 0;
     font-size: 18px;
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
@@ -100,6 +143,15 @@ body {
 .store-list-content {
     flex: 1;
     overflow-y: auto;
+}
+.sheet-info {
+    flex: 1;
+    overflow-y: auto;
+    cursor: pointer; /* 카드 다시 누르면 상세 이동 어포던스 */
+}
+.sheet-info .infowindow-wrap {
+    width: auto;
+    padding: 5px 0;
 }
 .store-item {
     padding: 12px 5px;
@@ -131,11 +183,10 @@ body {
 
 /* 하단 내비게이션 바 */
 .bottom-nav {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100%;
     display: flex;
     background-color: #ffffff;
     border-top: 1px solid #f0f1f5;
