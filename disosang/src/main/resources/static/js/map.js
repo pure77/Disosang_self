@@ -466,3 +466,69 @@ document.getElementById('locBtn').addEventListener('click', function () {
         alert('GPS를 지원하지 않는 브라우저입니다.');
     }
 });
+
+// 바텀시트 드래그(카카오맵식 3단 스냅)
+function vh(percent) {
+    return window.innerHeight * percent / 100;
+}
+
+function snapOffsets() {
+    return [
+        { state: 'expanded', y: 0 },
+        { state: 'half', y: vh(38) },
+        { state: 'collapsed', y: vh(78) - 110 }
+    ];
+}
+
+function currentOffsetY() {
+    const match = snapOffsets().find((s) => bottomSheet.classList.contains(s.state));
+    return match ? match.y : 0;
+}
+
+let sheetDragging = false;
+let sheetStartY = 0;
+let sheetStartOffset = 0;
+let sheetCurrentOffset = 0;
+
+sheetHandle.addEventListener('pointerdown', function (e) {
+    sheetDragging = true;
+    sheetStartY = e.clientY;
+    sheetStartOffset = currentOffsetY();
+    sheetCurrentOffset = sheetStartOffset;
+    bottomSheet.style.transition = 'none';
+    sheetHandle.setPointerCapture(e.pointerId);
+});
+
+sheetHandle.addEventListener('pointermove', function (e) {
+    if (!sheetDragging) return;
+    const maxY = vh(78) - 110;
+    const delta = e.clientY - sheetStartY;
+    sheetCurrentOffset = Math.min(Math.max(sheetStartOffset + delta, 0), maxY);
+    bottomSheet.style.transform = `translateY(${sheetCurrentOffset}px)`;
+});
+
+sheetHandle.addEventListener('pointerup', function (e) {
+    if (!sheetDragging) return;
+    sheetDragging = false;
+    bottomSheet.style.transition = '';
+    sheetHandle.releasePointerCapture(e.pointerId);
+
+    // 거의 안 움직였으면 탭으로 간주: collapsed <-> half 토글
+    if (Math.abs(sheetCurrentOffset - sheetStartOffset) < 5) {
+        const cur = snapOffsets().find((s) => bottomSheet.classList.contains(s.state));
+        setSheetState(cur && cur.state === 'collapsed' ? 'half' : 'collapsed');
+        return;
+    }
+
+    // 가장 가까운 스냅으로 고정
+    let nearest = snapOffsets()[0];
+    let best = Infinity;
+    snapOffsets().forEach(function (o) {
+        const d = Math.abs(o.y - sheetCurrentOffset);
+        if (d < best) {
+            best = d;
+            nearest = o;
+        }
+    });
+    setSheetState(nearest.state);
+});
