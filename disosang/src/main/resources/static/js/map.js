@@ -12,6 +12,48 @@ const pageSize = 10;
 let infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
 const markerImageCache = new Map();
 
+const bottomSheet = document.getElementById('bottomSheet');
+const sheetHandle = document.getElementById('sheetHandle');
+const sheetListEl = document.getElementById('sheetList');
+const sheetInfoEl = document.getElementById('sheetInfo');
+
+function setSheetState(state) {
+    bottomSheet.classList.remove('hidden', 'expanded', 'half', 'collapsed');
+    bottomSheet.style.transform = '';
+    bottomSheet.classList.add(state);
+}
+
+function showSheetList() {
+    sheetInfoEl.hidden = true;
+    sheetListEl.hidden = false;
+}
+
+function showStoreInfoInSheet(store) {
+    sheetInfoEl.innerHTML = createInfoWindowContent(store);
+    sheetListEl.hidden = true;
+    sheetInfoEl.hidden = false;
+    setSheetState('half');
+
+    const closeBtn = sheetInfoEl.querySelector('.close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = function (e) {
+            e.stopPropagation();
+            showSheetList();
+        };
+    }
+    sheetInfoEl.querySelectorAll('a').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+    const wrap = sheetInfoEl.querySelector('.infowindow-wrap');
+    if (wrap) {
+        wrap.addEventListener('click', function () {
+            window.location.href = '/store/detail/' + store.id;
+        });
+    }
+}
+
 function buildMarkerSvg(fillColor) {
     return `
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
@@ -116,6 +158,8 @@ async function doSearch(rawKeyword) {
         ensureResultsVisible(currentStores);
         closeInfoWindow();
         showStores();
+        showSheetList();
+        setSheetState(currentStores.length ? 'half' : 'collapsed');
 
         if (searchContext.notice) {
             renderStatus(searchContext.notice);
@@ -129,6 +173,8 @@ async function doSearch(rawKeyword) {
         currentPage = 1;
         closeInfoWindow();
         showStores();
+        showSheetList();
+        setSheetState('collapsed');
         renderStatus(error.message || '검색 중 오류가 발생했습니다.', true);
     }
 }
@@ -248,9 +294,9 @@ function getStatusElement() {
         statusElement.style.fontSize = '13px';
         statusElement.style.color = '#666';
 
-        const sidebar = document.querySelector('.result-sidebar');
+        const listView = document.getElementById('sheetList');
         const storeList = document.getElementById('storeList');
-        sidebar.insertBefore(statusElement, storeList);
+        listView.insertBefore(statusElement, storeList);
     }
 
     return statusElement;
@@ -301,21 +347,16 @@ function showStores() {
         const marker = new kakao.maps.Marker(getMarkerOptions(store, position));
         markers.push(marker);
 
-        const content = createInfoWindowContent(store);
-
         kakao.maps.event.addListener(marker, 'click', function () {
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
+            map.setCenter(position);
+            showStoreInfoInSheet(store);
         });
 
         const item = document.createElement('div');
         item.className = 'store-item';
         item.innerHTML = `<strong>${store.placeName}</strong><br><small>${store.addressName}</small>`;
         item.addEventListener('click', () => {
-            map.setCenter(position);
-            map.setLevel(3);
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
+            window.location.href = '/store/detail/' + store.id;
         });
         listDiv.appendChild(item);
     });
