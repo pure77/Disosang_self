@@ -197,7 +197,7 @@ body {
     display: flex;
     background-color: #ffffff;
     border-top: 1px solid #f0f1f5;
-    padding: 5px 0;
+    padding: 8px 0;
     z-index: 20;
 }
 .nav-item {
@@ -210,12 +210,12 @@ body {
     color: #0075ff;
 }
 .nav-item .icon {
-    font-size: 21px;
+    font-size: 24px;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 .nav-item .label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
 }
 

@@ -17,8 +17,23 @@ body {
 
 /* 1. 헤더 */
 .detail-header {
-    padding: 20px 15px;
+    position: relative;
+    padding: 20px 15px 20px 50px;
     border-bottom: 1px solid #eee;
+}
+.detail-header .back-btn {
+    position: absolute;
+    left: 8px;
+    top: 18px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: none;
+    font-size: 26px;
+    line-height: 1;
+    color: #333;
+    cursor: pointer;
+    padding: 0;
 }
 .detail-header h1 {
     margin: 0 0 5px 0;

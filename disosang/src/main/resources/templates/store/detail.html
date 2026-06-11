@@ -11,6 +11,7 @@
 <div class="detail-container">
 
     <header class="detail-header">
+        <button type="button" class="back-btn" onclick="goBackToMap()" aria-label="뒤로가기">←</button>
         <h1 th:text="${store.placeName}">가게 이름</h1>
         <span class="category" th:text="${store.category}">카테고리</span>
     </header>
@@ -226,5 +227,15 @@
 </div>
 
 <script src="/js/detail.js" defer></script>
+<script>
+    function goBackToMap() {
+        // 지도에서 들어온 경우 뒤로가기로 검색 상태 유지, 아니면 지도로 이동
+        if (document.referrer && document.referrer.indexOf('/store/map') !== -1) {
+            window.history.back();
+        } else {
+            window.location.href = '/store/map';
+        }
+    }
+</script>
 </body>
 </html>
