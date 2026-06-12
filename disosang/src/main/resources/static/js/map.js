@@ -372,7 +372,13 @@ function showStores() {
 
         const item = document.createElement('div');
         item.className = 'store-item';
-        item.innerHTML = `<strong>${store.placeName}</strong><br><small>${store.addressName}</small>`;
+        const nameEl = document.createElement('strong');
+        nameEl.textContent = store.placeName;
+        const addrEl = document.createElement('small');
+        addrEl.textContent = store.addressName;
+        item.appendChild(nameEl);
+        item.appendChild(document.createElement('br'));
+        item.appendChild(addrEl);
         item.addEventListener('click', () => {
             map.setCenter(position);
             showStoreInfoInSheet(store);
@@ -390,9 +396,17 @@ function createPinElement(store, position) {
     const label = document.createElement('div');
     label.className = 'map-pin-label';
     const hasRating = store.averageRating && store.averageRating > 0;
-    label.innerHTML = (hasRating
-        ? `<span class="map-pin-star">★ ${store.averageRating}</span> `
-        : '') + `<span class="map-pin-name">${store.placeName}</span>`;
+    if (hasRating) {
+        const starSpan = document.createElement('span');
+        starSpan.className = 'map-pin-star';
+        starSpan.textContent = '★ ' + store.averageRating;
+        label.appendChild(starSpan);
+        label.appendChild(document.createTextNode(' '));
+    }
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'map-pin-name';
+    nameSpan.textContent = store.placeName;
+    label.appendChild(nameSpan);
 
     const icon = document.createElement('div');
     icon.className = 'map-pin-icon';
@@ -416,7 +430,24 @@ function pinColor(store) {
     return '#0075ff';
 }
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function createInfoWindowContent(store) {
+    const name = escapeHtml(store.placeName);
+    const roadAddr = escapeHtml(store.roadAddressName || store.addressName);
+    const addr = escapeHtml(store.addressName);
+    const phone = escapeHtml(store.phone) || '전화번호 정보 없음';
+    const detailUrl = `/store/detail/${store.id}`;
+    const directionsUrl = `https://map.kakao.com/link/to/${encodeURIComponent(store.placeName)},${store.y},${store.x}`;
+
     let ratingHtml = '';
     if (store.averageRating && store.averageRating > 0) {
         const stars = '★'.repeat(Math.floor(store.averageRating)) + '☆'.repeat(5 - Math.floor(store.averageRating));
@@ -437,9 +468,6 @@ function createInfoWindowContent(store) {
         </div>`;
     }
 
-    const directionsUrl = `https://map.kakao.com/link/to/${store.placeName},${store.y},${store.x}`;
-    const detailUrl = `/store/detail/${store.id}`;
-
     return `
     <div class="infowindow-wrap">
         <div class="close-btn">×</div>
@@ -447,22 +475,22 @@ function createInfoWindowContent(store) {
         <div class="info-header">
             <div class="text-content">
                 <a href="${detailUrl}" style="text-decoration: none; color: inherit;">
-                    <div class="title">${store.placeName}</div>
+                    <div class="title">${name}</div>
                 </a>
                 ${ratingHtml}
             </div>
 
             ${store.thumbnailUrl
                 ? `<a href="${detailUrl}">
-                    <img src="${store.thumbnailUrl}" alt="${store.placeName}" class="thumbnail">
+                    <img src="${escapeHtml(store.thumbnailUrl)}" alt="${name}" class="thumbnail">
                  </a>`
                 : ''}
         </div>
 
         <div class="info-body">
-            <p>${store.roadAddressName || store.addressName}</p>
-            <p class="jibun">(지번) ${store.addressName}</p>
-            <p>${store.phone || '전화번호 정보 없음'}</p>
+            <p>${roadAddr}</p>
+            <p class="jibun">(지번) ${addr}</p>
+            <p>${phone}</p>
         </div>
 
         <div class="info-links">

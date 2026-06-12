@@ -4,13 +4,11 @@ import com.pmh.disosang.map.store.entity.Store;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 가맹점 응답용 DTO (클라이언트 응답 전용)
  */
 @Getter
-@Setter
 @AllArgsConstructor
 @Builder
 public class StoreResponse {
@@ -35,6 +33,10 @@ public class StoreResponse {
 
     // 현재 로그인 사용자가 즐겨찾기한 가게인지 여부 (지도 검색에서만 채워짐)
     private boolean favorite;
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
 
     public static StoreResponse fromEntity(Store store) {
         return StoreResponse.builder()

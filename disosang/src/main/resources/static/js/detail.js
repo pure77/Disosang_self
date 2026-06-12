@@ -360,8 +360,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     favoriteBtn.addEventListener('click', async function () {
         const storeId = favoriteBtn.getAttribute('data-store-id');
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        if (!csrfMeta || !csrfHeaderMeta) {
+            window.location.href = '/user/login';
+            return;
+        }
+        const csrfToken = csrfMeta.getAttribute('content');
+        const csrfHeader = csrfHeaderMeta.getAttribute('content');
 
         try {
             const res = await fetch('/favorites/toggle', {
