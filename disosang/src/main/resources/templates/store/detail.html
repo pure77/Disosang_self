@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${store.placeName}">가게 상세 정보</title>
     <link rel="stylesheet" href="/css/detail.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
 
@@ -19,7 +21,11 @@
     <div class="action-buttons">
         <a href="#" class="btn"><span>🗺️</span> 지도</a>
         <a href="#" class="btn"><span>🔗</span> 공유</a>
-        <a href="#" class="btn"><span>⭐</span> 즐겨찾기</a>
+        <button type="button" id="favoriteBtn" class="btn favorite-btn"
+                th:classappend="${isFavorite} ? ' active' : ''"
+                th:data-store-id="${store.id}">
+            <span class="fav-icon" th:text="${isFavorite} ? '★' : '☆'">☆</span> 즐겨찾기
+        </button>
         <a href="#" class="btn primary"><span>🚗</span> 도착</a>
     </div>
 

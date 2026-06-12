@@ -350,3 +350,49 @@ function removeExistingPhoto(button, photoUrl) {
 
     form.querySelector('.deleted-photos-container').appendChild(hiddenInput);
 }
+
+// =========================================
+// 즐겨찾기 토글
+// =========================================
+document.addEventListener('DOMContentLoaded', function () {
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    if (!favoriteBtn) return;
+
+    favoriteBtn.addEventListener('click', async function () {
+        const storeId = favoriteBtn.getAttribute('data-store-id');
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        try {
+            const res = await fetch('/favorites/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ storeId: Number(storeId) })
+            });
+
+            if (res.status === 401) {
+                window.location.href = '/user/login';
+                return;
+            }
+            if (!res.ok) {
+                alert('즐겨찾기 처리에 실패했습니다.');
+                return;
+            }
+
+            const data = await res.json();
+            const icon = favoriteBtn.querySelector('.fav-icon');
+            if (data.favorite) {
+                favoriteBtn.classList.add('active');
+                if (icon) icon.textContent = '★';
+            } else {
+                favoriteBtn.classList.remove('active');
+                if (icon) icon.textContent = '☆';
+            }
+        } catch (e) {
+            alert('즐겨찾기 처리 중 오류가 발생했습니다.');
+        }
+    });
+});
