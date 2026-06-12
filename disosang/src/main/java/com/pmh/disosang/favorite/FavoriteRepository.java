@@ -21,6 +21,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
      * 홈 즐겨찾기 목록용
      * - store를 fetch join 으로 함께 조회해 N+1을 방지합니다.
      */
-    @Query("select f from Favorite f join fetch f.store where f.user.id = :userId order by f.createdAt desc")
+    @Query("select f from Favorite f join fetch f.store s left join fetch s.category where f.user.id = :userId order by f.createdAt desc")
     List<Favorite> findByUserIdWithStore(@Param("userId") Long userId);
 }

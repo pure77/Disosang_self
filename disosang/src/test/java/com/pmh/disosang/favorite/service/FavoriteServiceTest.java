@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -59,5 +60,16 @@ class FavoriteServiceTest {
         assertThat(result).isFalse();
         verify(favoriteRepository).delete(existing);
         verify(storeRepository, never()).findById(any());
+    }
+
+    @Test
+    void 존재하지_않는_가게면_예외를_던진다() {
+        User user = userWithId(1L);
+        given(favoriteRepository.findByUser_IdAndStore_StoreId(1L, 99L)).willReturn(Optional.empty());
+        given(storeRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> favoriteService.toggle(user, 99L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("존재하지 않는 가게입니다.");
     }
 }
