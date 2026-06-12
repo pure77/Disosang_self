@@ -70,6 +70,15 @@ function buildMarkerSvg(fillColor) {
     `.trim();
 }
 
+function buildStarMarkerSvg() {
+    return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
+            <path d="M12 2l2.9 6.26 6.9.6-5.2 4.52 1.56 6.74L12 17.27 5.84 20.12 7.4 13.38 2.2 8.86l6.9-.6L12 2z"
+                  fill="#f5c518" stroke="#e0a800" stroke-width="1"/>
+        </svg>
+    `.trim();
+}
+
 function getMarkerImage(fillColor) {
     if (!markerImageCache.has(fillColor)) {
         const svg = buildMarkerSvg(fillColor);
@@ -350,13 +359,16 @@ function showStores() {
 
     stores.forEach((store) => {
         const position = new kakao.maps.LatLng(store.y, store.x);
-        const marker = new kakao.maps.Marker(getMarkerOptions(store, position));
-        markers.push(marker);
 
-        kakao.maps.event.addListener(marker, 'click', function () {
-            map.setCenter(position);
-            showStoreInfoInSheet(store);
+        const overlay = new kakao.maps.CustomOverlay({
+            map: map,
+            position: position,
+            content: createPinElement(store, position),
+            yAnchor: 1,
+            clickable: true,
+            zIndex: store.favorite ? 5 : 3
         });
+        markers.push(overlay);
 
         const item = document.createElement('div');
         item.className = 'store-item';
@@ -369,6 +381,39 @@ function showStores() {
     });
 
     renderPagination();
+}
+
+function createPinElement(store, position) {
+    const wrap = document.createElement('div');
+    wrap.className = 'map-pin' + (store.favorite ? ' favorite' : '');
+
+    const label = document.createElement('div');
+    label.className = 'map-pin-label';
+    const hasRating = store.averageRating && store.averageRating > 0;
+    label.innerHTML = (hasRating
+        ? `<span class="map-pin-star">★ ${store.averageRating}</span> `
+        : '') + `<span class="map-pin-name">${store.placeName}</span>`;
+
+    const icon = document.createElement('div');
+    icon.className = 'map-pin-icon';
+    icon.innerHTML = store.favorite ? buildStarMarkerSvg() : buildMarkerSvg(pinColor(store));
+
+    wrap.appendChild(label);
+    wrap.appendChild(icon);
+
+    wrap.addEventListener('click', function () {
+        map.setCenter(position);
+        showStoreInfoInSheet(store);
+    });
+
+    return wrap;
+}
+
+function pinColor(store) {
+    const storeType = (store.storeType || '').toLowerCase();
+    if (storeType === 'cheap') return '#27ae60';
+    if (storeType === 'tm') return '#f39c12';
+    return '#0075ff';
 }
 
 function createInfoWindowContent(store) {
