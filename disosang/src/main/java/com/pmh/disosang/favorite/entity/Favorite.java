@@ -13,11 +13,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * 즐겨찾기
@@ -33,7 +35,7 @@ import java.time.LocalDateTime;
         )
 )
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Favorite {
 
     @Id
@@ -54,8 +56,8 @@ public class Favorite {
 
     @Builder
     public Favorite(User user, Store store) {
-        this.user = user;
-        this.store = store;
+        this.user = Objects.requireNonNull(user, "user must not be null");
+        this.store = Objects.requireNonNull(store, "store must not be null");
     }
 
     @PrePersist
