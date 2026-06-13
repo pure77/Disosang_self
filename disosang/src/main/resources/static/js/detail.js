@@ -402,3 +402,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// =========================================
+// 도착 버튼 - 현재위치 기반 카카오맵 길찾기
+// =========================================
+document.addEventListener('DOMContentLoaded', function () {
+    const arriveBtn = document.getElementById('arriveBtn');
+    if (!arriveBtn) return;
+
+    arriveBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const name = arriveBtn.getAttribute('data-name');
+        const lat = arriveBtn.getAttribute('data-y'); // y = 위도
+        const lng = arriveBtn.getAttribute('data-x'); // x = 경도
+        openKakaoDirections(name, lat, lng);
+    });
+});
