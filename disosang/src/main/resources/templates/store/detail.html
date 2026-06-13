@@ -5,21 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${store.placeName}">가게 상세 정보</title>
     <link rel="stylesheet" href="/css/detail.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
 
 <div class="detail-container">
 
     <header class="detail-header">
+        <button type="button" class="back-btn" onclick="goBackToMap()" aria-label="뒤로가기">←</button>
         <h1 th:text="${store.placeName}">가게 이름</h1>
         <span class="category" th:text="${store.category}">카테고리</span>
     </header>
 
     <div class="action-buttons">
-        <a href="#" class="btn"><span>🗺️</span> 지도</a>
-        <a href="#" class="btn"><span>🔗</span> 공유</a>
-        <a href="#" class="btn"><span>⭐</span> 즐겨찾기</a>
-        <a href="#" class="btn primary"><span>🚗</span> 도착</a>
+        <a th:href="@{/store/map(storeId=${store.id})}" class="btn"><span>🗺️</span> 지도</a>
+        <button type="button" id="favoriteBtn" class="btn favorite-btn"
+                th:classappend="${isFavorite} ? ' active' : ''"
+                th:data-store-id="${store.id}">
+            <span class="fav-icon" th:text="${isFavorite} ? '★' : '☆'">☆</span> 즐겨찾기
+        </button>
+        <a href="#" class="btn primary" id="arriveBtn"
+           th:data-name="${store.placeName}"
+           th:data-x="${store.x}"
+           th:data-y="${store.y}"><span>🚗</span> 도착</a>
     </div>
 
     <main class="detail-content">
@@ -225,6 +234,17 @@
     <a class="modal-nav next">&#10095;</a>
 </div>
 
+<script src="/js/directions.js" defer></script>
 <script src="/js/detail.js" defer></script>
+<script>
+    function goBackToMap() {
+        // 지도에서 들어온 경우 뒤로가기로 검색 상태 유지, 아니면 지도로 이동
+        if (document.referrer && document.referrer.indexOf('/store/map') !== -1) {
+            window.history.back();
+        } else {
+            window.location.href = '/store/map';
+        }
+    }
+</script>
 </body>
 </html>

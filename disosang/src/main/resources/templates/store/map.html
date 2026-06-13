@@ -31,11 +31,16 @@
         </div>
     </div>
 
-    <div class="result-sidebar">
-        <h3>검색 결과</h3>
-        <div id="storeList" class="store-list-content">
+    <div class="bottom-sheet hidden" id="bottomSheet">
+        <div class="sheet-handle" id="sheetHandle"><span class="grip"></span></div>
+        <div class="sheet-content">
+            <div class="sheet-list" id="sheetList">
+                <h3>검색 결과</h3>
+                <div id="storeList" class="store-list-content"></div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+            <div class="sheet-info" id="sheetInfo" hidden></div>
         </div>
-        <div class="pagination" id="pagination"></div>
     </div>
 </div>
 
@@ -54,6 +59,7 @@
     </a>
 </nav>
 
+<script src="/js/directions.js"></script>
 <script src="/js/map.js"></script>
 
 </body>

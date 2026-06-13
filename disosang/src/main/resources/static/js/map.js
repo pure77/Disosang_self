@@ -12,12 +12,77 @@ const pageSize = 10;
 let infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
 const markerImageCache = new Map();
 
+const bottomSheet = document.getElementById('bottomSheet');
+const sheetHandle = document.getElementById('sheetHandle');
+const sheetListEl = document.getElementById('sheetList');
+const sheetInfoEl = document.getElementById('sheetInfo');
+
+// 시트 바닥을 실제 바텀 네비 높이 위에 고정 (--nav-h)
+const navEl = document.querySelector('.bottom-nav');
+if (navEl) {
+    document.documentElement.style.setProperty('--nav-h', navEl.offsetHeight + 'px');
+}
+
+function setSheetState(state) {
+    bottomSheet.classList.remove('hidden', 'expanded', 'half', 'collapsed');
+    bottomSheet.style.height = '';
+    bottomSheet.classList.add(state);
+}
+
+function showSheetList() {
+    sheetInfoEl.hidden = true;
+    sheetListEl.hidden = false;
+}
+
+function showStoreInfoInSheet(store) {
+    sheetInfoEl.innerHTML = createInfoWindowContent(store);
+    sheetListEl.hidden = true;
+    sheetInfoEl.hidden = false;
+    setSheetState('half');
+
+    const closeBtn = sheetInfoEl.querySelector('.close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = function (e) {
+            e.stopPropagation();
+            showSheetList();
+        };
+    }
+    sheetInfoEl.querySelectorAll('a').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+    const directionsLink = sheetInfoEl.querySelector('.directions');
+    if (directionsLink) {
+        directionsLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openKakaoDirections(store.placeName, store.y, store.x);
+        });
+    }
+    const wrap = sheetInfoEl.querySelector('.infowindow-wrap');
+    if (wrap) {
+        wrap.addEventListener('click', function () {
+            window.location.href = '/store/detail/' + store.id;
+        });
+    }
+}
+
 function buildMarkerSvg(fillColor) {
     return `
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
             <path d="M16 1C8.3 1 2 7.3 2 15c0 10.4 11.8 22.6 13.1 23.9a1.3 1.3 0 0 0 1.8 0C18.2 37.6 30 25.4 30 15 30 7.3 23.7 1 16 1z"
                   fill="${fillColor}" stroke="#2c3e50" stroke-width="1.5"/>
             <circle cx="16" cy="15" r="5.5" fill="#ffffff"/>
+        </svg>
+    `.trim();
+}
+
+function buildStarMarkerSvg() {
+    return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
+            <path d="M12 2l2.9 6.26 6.9.6-5.2 4.52 1.56 6.74L12 17.27 5.84 20.12 7.4 13.38 2.2 8.86l6.9-.6L12 2z"
+                  fill="#f5c518" stroke="#e0a800" stroke-width="1"/>
         </svg>
     `.trim();
 }
@@ -116,6 +181,8 @@ async function doSearch(rawKeyword) {
         ensureResultsVisible(currentStores);
         closeInfoWindow();
         showStores();
+        showSheetList();
+        setSheetState(currentStores.length ? 'half' : 'collapsed');
 
         if (searchContext.notice) {
             renderStatus(searchContext.notice);
@@ -129,6 +196,8 @@ async function doSearch(rawKeyword) {
         currentPage = 1;
         closeInfoWindow();
         showStores();
+        showSheetList();
+        setSheetState('collapsed');
         renderStatus(error.message || '검색 중 오류가 발생했습니다.', true);
     }
 }
@@ -248,9 +317,9 @@ function getStatusElement() {
         statusElement.style.fontSize = '13px';
         statusElement.style.color = '#666';
 
-        const sidebar = document.querySelector('.result-sidebar');
+        const listView = document.getElementById('sheetList');
         const storeList = document.getElementById('storeList');
-        sidebar.insertBefore(statusElement, storeList);
+        listView.insertBefore(statusElement, storeList);
     }
 
     return statusElement;
@@ -298,24 +367,29 @@ function showStores() {
 
     stores.forEach((store) => {
         const position = new kakao.maps.LatLng(store.y, store.x);
-        const marker = new kakao.maps.Marker(getMarkerOptions(store, position));
-        markers.push(marker);
 
-        const content = createInfoWindowContent(store);
-
-        kakao.maps.event.addListener(marker, 'click', function () {
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
+        const overlay = new kakao.maps.CustomOverlay({
+            map: map,
+            position: position,
+            content: createPinElement(store, position),
+            yAnchor: 1,
+            clickable: true,
+            zIndex: store.favorite ? 5 : 3
         });
+        markers.push(overlay);
 
         const item = document.createElement('div');
         item.className = 'store-item';
-        item.innerHTML = `<strong>${store.placeName}</strong><br><small>${store.addressName}</small>`;
+        const nameEl = document.createElement('strong');
+        nameEl.textContent = store.placeName;
+        const addrEl = document.createElement('small');
+        addrEl.textContent = store.addressName;
+        item.appendChild(nameEl);
+        item.appendChild(document.createElement('br'));
+        item.appendChild(addrEl);
         item.addEventListener('click', () => {
             map.setCenter(position);
-            map.setLevel(3);
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
+            showStoreInfoInSheet(store);
         });
         listDiv.appendChild(item);
     });
@@ -323,7 +397,63 @@ function showStores() {
     renderPagination();
 }
 
+function createPinElement(store, position) {
+    const wrap = document.createElement('div');
+    wrap.className = 'map-pin' + (store.favorite ? ' favorite' : '');
+
+    const label = document.createElement('div');
+    label.className = 'map-pin-label';
+    const hasRating = store.averageRating && store.averageRating > 0;
+    if (hasRating) {
+        const starSpan = document.createElement('span');
+        starSpan.className = 'map-pin-star';
+        starSpan.textContent = '★ ' + store.averageRating;
+        label.appendChild(starSpan);
+        label.appendChild(document.createTextNode(' '));
+    }
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'map-pin-name';
+    nameSpan.textContent = store.placeName;
+    label.appendChild(nameSpan);
+
+    const icon = document.createElement('div');
+    icon.className = 'map-pin-icon';
+    icon.innerHTML = store.favorite ? buildStarMarkerSvg() : buildMarkerSvg(pinColor(store));
+
+    wrap.appendChild(label);
+    wrap.appendChild(icon);
+
+    wrap.addEventListener('click', function () {
+        map.setCenter(position);
+        showStoreInfoInSheet(store);
+    });
+
+    return wrap;
+}
+
+function pinColor(store) {
+    const storeType = (store.storeType || '').toLowerCase();
+    if (storeType === 'cheap') return '#27ae60';
+    if (storeType === 'tm') return '#f39c12';
+    return '#0075ff';
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function createInfoWindowContent(store) {
+    const name = escapeHtml(store.placeName);
+    const roadAddr = escapeHtml(store.roadAddressName || store.addressName);
+    const addr = escapeHtml(store.addressName);
+    const phone = escapeHtml(store.phone) || '전화번호 정보 없음';
+    const detailUrl = `/store/detail/${store.id}`;
     let ratingHtml = '';
     if (store.averageRating && store.averageRating > 0) {
         const stars = '★'.repeat(Math.floor(store.averageRating)) + '☆'.repeat(5 - Math.floor(store.averageRating));
@@ -344,32 +474,29 @@ function createInfoWindowContent(store) {
         </div>`;
     }
 
-    const directionsUrl = `https://map.kakao.com/link/to/${store.placeName},${store.y},${store.x}`;
-    const detailUrl = `/store/detail/${store.id}`;
-
     return `
     <div class="infowindow-wrap">
-        <div class="close-btn" onclick="closeInfoWindow()">×</div>
+        <div class="close-btn">×</div>
 
         <div class="info-header">
             <div class="text-content">
                 <a href="${detailUrl}" style="text-decoration: none; color: inherit;">
-                    <div class="title">${store.placeName}</div>
+                    <div class="title">${name}</div>
                 </a>
                 ${ratingHtml}
             </div>
 
             ${store.thumbnailUrl
                 ? `<a href="${detailUrl}">
-                    <img src="${store.thumbnailUrl}" alt="${store.placeName}" class="thumbnail">
+                    <img src="${escapeHtml(store.thumbnailUrl)}" alt="${name}" class="thumbnail">
                  </a>`
                 : ''}
         </div>
 
         <div class="info-body">
-            <p>${store.roadAddressName || store.addressName}</p>
-            <p class="jibun">(지번) ${store.addressName}</p>
-            <p>${store.phone || '전화번호 정보 없음'}</p>
+            <p>${roadAddr}</p>
+            <p class="jibun">(지번) ${addr}</p>
+            <p>${phone}</p>
         </div>
 
         <div class="info-links">
@@ -377,7 +504,7 @@ function createInfoWindowContent(store) {
         </div>
 
         <div class="info-buttons">
-            <a href="${directionsUrl}" target="_blank" class="directions">길찾기</a>
+            <a href="#" class="directions">길찾기</a>
         </div>
     </div>
     `;
@@ -420,8 +547,98 @@ document.getElementById('locBtn').addEventListener('click', function () {
 
             infowindow.setContent("<div style='padding:5px;'>현재 위치</div>");
             infowindow.open(map, marker);
-        });
+        }, function (err) {
+            if (err.code === err.PERMISSION_DENIED) {
+                alert('위치 권한이 거부되었습니다. 브라우저 설정에서 위치 접근을 허용해주세요.');
+            } else {
+                alert('현재위치를 가져올 수 없습니다. (HTTPS 환경에서만 동작합니다)');
+            }
+        }, { enableHighAccuracy: true, timeout: 8000 });
     } else {
         alert('GPS를 지원하지 않는 브라우저입니다.');
     }
 });
+
+// 바텀시트 드래그(카카오맵식 3단 스냅) — 높이 기반(바닥은 네비 위에 고정)
+function snapHeights() {
+    return [
+        { state: 'collapsed', h: 96 },
+        { state: 'half', h: window.innerHeight * 0.42 },
+        { state: 'expanded', h: window.innerHeight - 200 }
+    ];
+}
+
+let sheetDragging = false;
+let sheetStartY = 0;
+let sheetStartHeight = 0;
+let sheetCurrentHeight = 0;
+
+sheetHandle.addEventListener('pointerdown', function (e) {
+    sheetDragging = true;
+    sheetStartY = e.clientY;
+    sheetStartHeight = bottomSheet.getBoundingClientRect().height;
+    sheetCurrentHeight = sheetStartHeight;
+    bottomSheet.style.transition = 'none';
+    sheetHandle.setPointerCapture(e.pointerId);
+});
+
+sheetHandle.addEventListener('pointermove', function (e) {
+    if (!sheetDragging) return;
+    const minH = 96;
+    const maxH = window.innerHeight - 160;
+    // 위로 끌면(clientY 감소) 시트 높이 증가
+    sheetCurrentHeight = Math.min(Math.max(sheetStartHeight + (sheetStartY - e.clientY), minH), maxH);
+    bottomSheet.style.height = sheetCurrentHeight + 'px';
+});
+
+sheetHandle.addEventListener('pointerup', function (e) {
+    if (!sheetDragging) return;
+    sheetDragging = false;
+    bottomSheet.style.transition = '';
+    sheetHandle.releasePointerCapture(e.pointerId);
+
+    // 거의 안 움직였으면 탭으로 간주: collapsed <-> half 토글
+    if (Math.abs(sheetCurrentHeight - sheetStartHeight) < 5) {
+        const cur = snapHeights().find((s) => bottomSheet.classList.contains(s.state));
+        setSheetState(cur && cur.state === 'collapsed' ? 'half' : 'collapsed');
+        return;
+    }
+
+    // 가장 가까운 스냅 높이로 고정
+    let nearest = snapHeights()[0];
+    let best = Infinity;
+    snapHeights().forEach(function (o) {
+        const d = Math.abs(o.h - sheetCurrentHeight);
+        if (d < best) {
+            best = d;
+            nearest = o;
+        }
+    });
+    setSheetState(nearest.state);
+});
+
+// 상세 화면의 "지도" 버튼으로 진입한 경우: 해당 가게 핀으로 이동 + 정보시트 자동 열기
+(function focusStoreFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = params.get('storeId');
+    if (!storeId) return;
+
+    fetch('/store/detail/' + storeId + '/json')
+        .then(function (res) {
+            if (!res.ok) throw new Error('가게 정보를 불러오지 못했습니다.');
+            return res.json();
+        })
+        .then(function (store) {
+            currentStores = [store];
+            currentPage = 1;
+            showStores();
+
+            const position = new kakao.maps.LatLng(store.y, store.x);
+            map.setCenter(position);
+            map.setLevel(4);
+            showStoreInfoInSheet(store);
+        })
+        .catch(function () {
+            renderStatus('가게 정보를 불러오지 못했습니다.', true);
+        });
+})();

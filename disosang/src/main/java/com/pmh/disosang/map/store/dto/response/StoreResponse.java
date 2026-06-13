@@ -31,6 +31,13 @@ public class StoreResponse {
     private Integer reviewCount;
     private String thumbnailUrl;
 
+    // 현재 로그인 사용자가 즐겨찾기한 가게인지 여부 (지도 검색에서만 채워짐)
+    private boolean favorite;
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
     public static StoreResponse fromEntity(Store store) {
         return StoreResponse.builder()
                 .id(store.getStoreId())
@@ -50,6 +57,7 @@ public class StoreResponse {
                 .averageRating(store.getAverageRating())
                 .reviewCount(store.getReviewCount())
                 .thumbnailUrl(store.getThumbnailUrl())
+                .favorite(false)
                 .build();
     }
 }

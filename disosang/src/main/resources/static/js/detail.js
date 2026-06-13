@@ -350,3 +350,71 @@ function removeExistingPhoto(button, photoUrl) {
 
     form.querySelector('.deleted-photos-container').appendChild(hiddenInput);
 }
+
+// =========================================
+// 즐겨찾기 토글
+// =========================================
+document.addEventListener('DOMContentLoaded', function () {
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    if (!favoriteBtn) return;
+
+    favoriteBtn.addEventListener('click', async function () {
+        const storeId = favoriteBtn.getAttribute('data-store-id');
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        if (!csrfMeta || !csrfHeaderMeta) {
+            window.location.href = '/user/login';
+            return;
+        }
+        const csrfToken = csrfMeta.getAttribute('content');
+        const csrfHeader = csrfHeaderMeta.getAttribute('content');
+
+        try {
+            const res = await fetch('/favorites/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ storeId: Number(storeId) })
+            });
+
+            if (res.status === 401) {
+                window.location.href = '/user/login';
+                return;
+            }
+            if (!res.ok) {
+                alert('즐겨찾기 처리에 실패했습니다.');
+                return;
+            }
+
+            const data = await res.json();
+            const icon = favoriteBtn.querySelector('.fav-icon');
+            if (data.favorite) {
+                favoriteBtn.classList.add('active');
+                if (icon) icon.textContent = '★';
+            } else {
+                favoriteBtn.classList.remove('active');
+                if (icon) icon.textContent = '☆';
+            }
+        } catch (e) {
+            alert('즐겨찾기 처리 중 오류가 발생했습니다.');
+        }
+    });
+});
+
+// =========================================
+// 도착 버튼 - 현재위치 기반 카카오맵 길찾기
+// =========================================
+document.addEventListener('DOMContentLoaded', function () {
+    const arriveBtn = document.getElementById('arriveBtn');
+    if (!arriveBtn) return;
+
+    arriveBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const name = arriveBtn.getAttribute('data-name');
+        const lat = arriveBtn.getAttribute('data-y'); // y = 위도
+        const lng = arriveBtn.getAttribute('data-x'); // x = 경도
+        openKakaoDirections(name, lat, lng);
+    });
+});

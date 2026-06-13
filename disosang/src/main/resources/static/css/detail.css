@@ -4,21 +4,38 @@
 body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: #f5f5f5;
+    background-color: #f0f1f5;
     /* 하단바 공간 확보 */
     padding-bottom: 70px;
 }
 
 .detail-container {
-    max-width: 600px;
+    max-width: 420px;
     margin: 0 auto;
+    min-height: 100vh;
     background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 /* 1. 헤더 */
 .detail-header {
-    padding: 20px 15px;
+    position: relative;
+    padding: 20px 15px 20px 50px;
     border-bottom: 1px solid #eee;
+}
+.detail-header .back-btn {
+    position: absolute;
+    left: 8px;
+    top: 18px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: none;
+    font-size: 26px;
+    line-height: 1;
+    color: #333;
+    cursor: pointer;
+    padding: 0;
 }
 .detail-header h1 {
     margin: 0 0 5px 0;
@@ -155,7 +172,7 @@ body {
     border-top: 1px solid #f0f1f5;
     padding: 8px 0;
     z-index: 20;
-    max-width: 600px;
+    max-width: 420px;
     /* max-width 적용을 위해 left, right 수정 */
     left: 50%;
     transform: translateX(-50%);
@@ -645,4 +662,20 @@ body {
 @keyframes zoom {
     from {transform:scale(0)}
     to {transform:scale(1)}
+}
+
+/* 즐겨찾기 버튼 (action-buttons 안의 button 을 a.btn 과 동일하게 보이도록) */
+.action-buttons .favorite-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 0;
+}
+.action-buttons .favorite-btn.active {
+    color: #f0ad4e;
+    font-weight: 700;
+}
+.action-buttons .favorite-btn.active .fav-icon {
+    color: #f0ad4e;
 }
