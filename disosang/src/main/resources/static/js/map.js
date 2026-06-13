@@ -52,6 +52,14 @@ function showStoreInfoInSheet(store) {
             e.stopPropagation();
         });
     });
+    const directionsLink = sheetInfoEl.querySelector('.directions');
+    if (directionsLink) {
+        directionsLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openKakaoDirections(store.placeName, store.y, store.x);
+        });
+    }
     const wrap = sheetInfoEl.querySelector('.infowindow-wrap');
     if (wrap) {
         wrap.addEventListener('click', function () {
@@ -446,8 +454,6 @@ function createInfoWindowContent(store) {
     const addr = escapeHtml(store.addressName);
     const phone = escapeHtml(store.phone) || '전화번호 정보 없음';
     const detailUrl = `/store/detail/${store.id}`;
-    const directionsUrl = `https://map.kakao.com/link/to/${encodeURIComponent(store.placeName)},${store.y},${store.x}`;
-
     let ratingHtml = '';
     if (store.averageRating && store.averageRating > 0) {
         const stars = '★'.repeat(Math.floor(store.averageRating)) + '☆'.repeat(5 - Math.floor(store.averageRating));
@@ -498,7 +504,7 @@ function createInfoWindowContent(store) {
         </div>
 
         <div class="info-buttons">
-            <a href="${directionsUrl}" target="_blank" class="directions">길찾기</a>
+            <a href="#" class="directions">길찾기</a>
         </div>
     </div>
     `;
@@ -541,7 +547,13 @@ document.getElementById('locBtn').addEventListener('click', function () {
 
             infowindow.setContent("<div style='padding:5px;'>현재 위치</div>");
             infowindow.open(map, marker);
-        });
+        }, function (err) {
+            if (err.code === err.PERMISSION_DENIED) {
+                alert('위치 권한이 거부되었습니다. 브라우저 설정에서 위치 접근을 허용해주세요.');
+            } else {
+                alert('현재위치를 가져올 수 없습니다. (HTTPS 환경에서만 동작합니다)');
+            }
+        }, { enableHighAccuracy: true, timeout: 8000 });
     } else {
         alert('GPS를 지원하지 않는 브라우저입니다.');
     }
@@ -604,3 +616,29 @@ sheetHandle.addEventListener('pointerup', function (e) {
     });
     setSheetState(nearest.state);
 });
+
+// 상세 화면의 "지도" 버튼으로 진입한 경우: 해당 가게 핀으로 이동 + 정보시트 자동 열기
+(function focusStoreFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = params.get('storeId');
+    if (!storeId) return;
+
+    fetch('/store/detail/' + storeId + '/json')
+        .then(function (res) {
+            if (!res.ok) throw new Error('가게 정보를 불러오지 못했습니다.');
+            return res.json();
+        })
+        .then(function (store) {
+            currentStores = [store];
+            currentPage = 1;
+            showStores();
+
+            const position = new kakao.maps.LatLng(store.y, store.x);
+            map.setCenter(position);
+            map.setLevel(4);
+            showStoreInfoInSheet(store);
+        })
+        .catch(function () {
+            renderStatus('가게 정보를 불러오지 못했습니다.', true);
+        });
+})();
