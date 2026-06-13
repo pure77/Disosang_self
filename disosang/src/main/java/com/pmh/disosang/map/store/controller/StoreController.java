@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,17 @@ public class StoreController {
         }
 
         return ResponseEntity.ok(storeResponses);
+    }
+
+    @GetMapping("/detail/{storeId}/json")
+    @ResponseBody
+    public ResponseEntity<StoreResponse> storeDetailJson(@PathVariable("storeId") Long storeId,
+                                                         @AuthenticationPrincipal User user) {
+        StoreResponse storeInfo = storeService.findById(storeId);
+        if (user != null) {
+            storeInfo.setFavorite(favoriteService.isFavorite(user.getId(), storeId));
+        }
+        return ResponseEntity.ok(storeInfo);
     }
 
     @GetMapping("/detail/{storeId}")
