@@ -1,0 +1,108 @@
+<svg viewBox="0 0 960 650" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif">
+  <title>Disosang 아키텍처 다이어그램</title>
+  <desc>사용자 브라우저가 Spring Boot 모놀리식 애플리케이션(View·Controller·Service·Repository 계층)에 접속하고, 애플리케이션은 MySQL과 Kakao Map API에 연결되는 계층형 구조.</desc>
+  <style>
+    .lbl{ fill: #1a1a1a; }
+    .sub{ fill: #6b6b6b; }
+    .box{ fill: #ffffff; stroke: #d4d4d4; }
+    .layer{ fill: #f6f6f4; stroke: #e3e3e0; }
+    .core{ fill: #E8F3DE; stroke: #6DB33F; }
+    .db{ fill: #EAF1F8; stroke: #4479A1; }
+    .ext{ fill: #FFF8E1; stroke: #E5B700; }
+    .edge{ stroke: #9a9a9a; stroke-width: 1.6; fill: none; }
+    .dash{ stroke-dasharray: 5 4; }
+    text{ font-size: 12px; }
+  </style>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9a9a9a"/>
+    </marker>
+  </defs>
+
+  <rect width="960" height="650" fill="#ffffff"/>
+
+  <!-- User -->
+  <rect class="box" x="28" y="262" width="120" height="92" rx="10"/>
+  <circle cx="88" cy="296" r="13" fill="#6b6b6b"/>
+  <rect x="71" y="312" width="34" height="16" rx="8" fill="#6b6b6b"/>
+  <text class="lbl" x="88" y="345" text-anchor="middle" font-weight="700">User · Browser</text>
+
+  <path class="edge" d="M148,308 L196,308" marker-end="url(#arr)"/>
+
+  <!-- App container -->
+  <rect class="box" x="200" y="56" width="478" height="560" rx="14"/>
+  <text class="lbl" x="220" y="84" font-weight="700" font-size="14">Spring Boot Application</text>
+  <text class="sub" x="220" y="101">Monolithic · Java 23 / Spring Boot 3.5</text>
+
+  <!-- Security strip -->
+  <rect class="layer" x="606" y="118" width="56" height="476" rx="9"/>
+  <text class="sub" x="634" y="356" text-anchor="middle" font-weight="600" transform="rotate(-90 634 356)">Spring Security  ·  Swagger</text>
+
+  <!-- View layer -->
+  <rect class="layer" x="220" y="118" width="372" height="66" rx="9"/>
+  <text class="lbl" x="234" y="143" font-weight="700">View</text>
+  <text class="sub" x="234" y="166">Thymeleaf (map · detail · user)  ·  Kakao Map JS</text>
+
+  <path class="edge" d="M406,184 L406,206" marker-end="url(#arr)"/>
+  <path class="edge" d="M392,206 L392,184" marker-end="url(#arr)"/>
+
+  <!-- Controller -->
+  <rect class="layer" x="220" y="206" width="372" height="60" rx="9"/>
+  <text class="lbl" x="234" y="231" font-weight="700">Controller</text>
+  <text class="sub" x="234" y="252">Store · Review · Favorite · User</text>
+
+  <path class="edge" d="M406,266 L406,288" marker-end="url(#arr)"/>
+  <path class="edge" d="M392,288 L392,266" marker-end="url(#arr)"/>
+
+  <!-- Service -->
+  <rect class="layer" x="220" y="288" width="372" height="120" rx="9"/>
+  <text class="lbl" x="234" y="311" font-weight="700">Service</text>
+  <rect class="core" x="234" y="320" width="344" height="40" rx="8"/>
+  <text class="lbl" x="246" y="338" font-weight="700" font-size="12.5">StoreService — 검색 엔진 핵심</text>
+  <text class="sub" x="246" y="353" font-size="11">검색 오케스트레이션 + Java 재정렬</text>
+  <text class="sub" x="234" y="388">SearchToken · Review · Favorite · User · Category</text>
+
+  <path class="edge" d="M406,408 L406,430" marker-end="url(#arr)"/>
+  <path class="edge" d="M392,430 L392,408" marker-end="url(#arr)"/>
+
+  <!-- Repository -->
+  <rect class="layer" x="220" y="430" width="372" height="66" rx="9"/>
+  <text class="lbl" x="234" y="455" font-weight="700">Repository — Spring Data JPA</text>
+  <text class="sub" x="234" y="478">+ Native Query : 공간 · UNION ALL · 토큰</text>
+
+  <!-- App -> MySQL -->
+  <path class="edge" d="M678,463 L740,463" marker-end="url(#arr)"/>
+  <path class="edge" d="M740,449 L678,449" marker-end="url(#arr)"/>
+  <text class="sub" x="709" y="442" text-anchor="middle" font-size="10.5">JPA / SQL</text>
+
+  <!-- MySQL -->
+  <rect class="db" x="740" y="356" width="196" height="232" rx="12"/>
+  <text class="lbl" x="838" y="383" text-anchor="middle" font-weight="700" font-size="14">MySQL</text>
+  <rect class="box" x="758" y="398" width="160" height="42" rx="7"/>
+  <text class="lbl" x="838" y="418" text-anchor="middle" font-size="11.5" font-weight="600">공간 인덱스 (R-Tree)</text>
+  <text class="sub" x="838" y="432" text-anchor="middle" font-size="10">화면 영역 좁히기</text>
+  <rect class="box" x="758" y="448" width="160" height="42" rx="7"/>
+  <text class="lbl" x="838" y="468" text-anchor="middle" font-size="11.5" font-weight="600">2-gram 토큰 역색인</text>
+  <text class="sub" x="838" y="482" text-anchor="middle" font-size="10">부분일치 후보 추출</text>
+  <rect class="box" x="758" y="498" width="160" height="42" rx="7"/>
+  <text class="lbl" x="838" y="518" text-anchor="middle" font-size="11.5" font-weight="600">카테고리 트리</text>
+  <text class="sub" x="838" y="532" text-anchor="middle" font-size="10">인접목록 + 재귀 CTE</text>
+
+  <!-- Kakao Map API -->
+  <rect class="ext" x="740" y="96" width="196" height="74" rx="12"/>
+  <text class="lbl" x="838" y="128" text-anchor="middle" font-weight="700">Kakao Map API</text>
+  <text class="sub" x="838" y="148" text-anchor="middle" font-size="11">외부 · 지도 렌더 / 좌표</text>
+  <path class="edge" d="M620,133 C670,133 700,133 740,133" marker-end="url(#arr)"/>
+  <path class="edge" d="M740,150 C700,150 660,150 620,150" marker-end="url(#arr)"/>
+
+  <!-- k6 -->
+  <rect class="box dash" x="28" y="470" width="120" height="62" rx="10"/>
+  <text class="lbl" x="88" y="497" text-anchor="middle" font-weight="700">k6 부하 테스트</text>
+  <text class="sub" x="88" y="516" text-anchor="middle" font-size="11">p95 측정</text>
+  <path class="edge dash" d="M148,501 C175,501 180,470 200,470" marker-end="url(#arr)"/>
+
+  <!-- ingestion (inactive) -->
+  <rect class="box dash" x="740" y="600" width="196" height="40" rx="9"/>
+  <text class="sub" x="838" y="624" text-anchor="middle" font-size="10.5">코나카드 API → 배치 적재 (현재 비활성)</text>
+  <path class="edge dash" d="M838,600 L838,588" marker-end="url(#arr)"/>
+</svg>
