@@ -1,0 +1,11 @@
+# AI agent / skills local tooling (machine-local, not part of the project)
+/.agents/
+/.claude/
+/skills-lock.json
+/ai-skills-guide.md
+/docs/agents/
+
+# Local artifacts
+/review-photo/
+/load_test/summary_100FTS*.html
+/load_test/summary_ex_code.html
