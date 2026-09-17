@@ -269,7 +269,7 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 | 단계 | 날짜 | k6 p95 중앙값 (전 → 후) | 확인 항목 | 문제와 해결 | 예상 → 실제 |
 |---|---|---|---|---|---|
 | 기준점 | 2026-09-17 | — → **739ms** (3회: 739 / 712 / 853, avg 368/343/364, 실패 0) | 태그 2d8b4ef, 덤프 15MB 복원 22초 14테이블 일치, 공간 인덱스·SRID OK | IntelliJ/bootRun의 C1 전용 JIT로 1차 측정이 940ms~1.28s → jar 실행으로 재측정 | 0.5일 → 0.5일 |
-| Gradle 9 | | ___ → ___ | deprecation 0건 | | |
+| Gradle 9.7.1 | 2026-09-17 | 739 → **693ms** (3회: 1,170 / 693 / 648, avg 560/331/320, 실패 0) | 8.14.3 config-time deprecation 0건, 9.7.1 build+test 통과(10 tests), deprecation 0건, wrapper 파일 1개만 변경 | 1회차 1.17s는 기동 직후 첫 회차(avg 560ms)로 JIT 미완 추정, 2~3회차는 기준점보다 빠름. 세션에서 띄운 Gradle 데몬을 사용자 터미널이 재사용해 첫 빌드 실패 → `--stop` 후 재실행 | 0.5~1일 → 0.5일 |
 | Boot 3.5.16 | | ___ → ___ | 코드 수정 0 | | |
 | JDK 25 | | ___ → ___ | Lombok 고정, agent 경고 0 | | |
 | MySQL 8.4 | | ___ → ___ | 체커 통과, EXPLAIN 동일, 인증 OK | | |
