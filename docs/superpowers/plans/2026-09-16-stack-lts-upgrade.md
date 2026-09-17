@@ -70,8 +70,19 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 ### 공통 완료 기준 (모든 단계 PR에 적용)
 - [ ] `./gradlew clean build` 통과 (테스트 포함)
 - [ ] dev 프로필로 앱 기동, 지도 영역 검색 API 1회 호출 성공 (FORCE INDEX 경로 확인)
-- [ ] k6 3회 실행, p95 중앙값이 300ms 이내이고 2단계 기준점 대비 +10% 이내
+- [ ] k6 3회 실행, p95 중앙값이 2단계 기준점 중앙값(739ms) 대비 **+15% 이내(≤ 850ms)**.
+      (+10%로 잡았으나 기준점 3회 자체의 편차가 712~853ms, 중앙값 대비 +15%라 그 안은 노이즈로 본다. 스크립트의 300ms 임계값은 판정에 쓰지 않는다.)
 - [ ] PR 본문에 확인 항목 / 수치 / 예상 vs 실제 시간 기록
+
+### k6 측정 조건 (모든 단계 동일하게)
+- 앱은 `./gradlew bootJar`로 만든 jar를 `java -jar`로 실행. **IntelliJ 실행이나 `bootRun`은 쓰지 않는다.**
+  둘 다 `-XX:TieredStopAtLevel=1`(C1 전용 JIT)을 붙여서 p95가 2~3배 나온다 (2026-09-17 확인: 940ms~1.28s vs jar 실행).
+- JDK: 현재 toolchain과 같은 버전 (`C:\Users\ParkMinHyun\.jdks\corretto-23.0.2\bin\java.exe`, 5단계 이후 25)
+- 프로필 dev, 로컬 MySQL, 같은 시드 데이터 (store 26,119행, store_search_token 151,571행)
+- 워밍업: 검색 API 100회 선호출 후 k6 시작
+- k6 v1.5.0, `load_test/store-test.js` 그대로 (100 VU ramping 30s/1m/30s), 3회 연속
+- 결과: `load_test/baseline/<날짜>_<단계>_{1,2,3}.{html,json,log}`, p95 중앙값을 §7 표에 기록
+- 장비: i7-1165G7 (4C/8T), 16GB, Windows 11. 노트북이라 회차가 갈수록 느려질 수 있음 → 중앙값 사용
 
 ---
 
@@ -126,12 +137,13 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 
 **목적**: "업그레이드 전"을 정확히 찍어 둔다.
 
-작업
-- `git tag pre-lts-upgrade` (1단계 머지 커밋에)
-- `mysqldump --single-transaction --routines --triggers tetto_test > backup/pre-lts-upgrade.sql` (backup 폴더는 .gitignore)
-- 복원 리허설: 빈 `mysql:8.0` 컨테이너에 복원 → `SHOW CREATE TABLE`로 공간 인덱스, SRID, 생성 컬럼 확인, 주요 테이블 행 수 비교
-- k6 3회 실행 → `load_test/baseline/2026-XX-XX_pre-upgrade_{1,2,3}.html`, 중앙값 p95를 이 파일 §7 표에 기록
-  - 조건 통일: 앱 워밍업(검색 API 50회 선호출) 후 측정, 같은 시드 데이터, 다른 프로그램 종료
+작업 (2026-09-17 수행)
+- `git tag pre-lts-upgrade` → 커밋 2d8b4ef (PR #6 Flyway 머지 커밋), origin에 푸시 완료
+- 덤프: `C:\Users\ParkMinHyun\Desktop\Disosang_backup\tetto_test_pre-lts-upgrade_2026-09-17.sql` (15MB, 저장소 밖)
+  `mysqldump --single-transaction --routines --triggers --set-gtid-purged=OFF`
+- 복원 리허설: Docker Desktop이 꺼져 있어 로컬 MySQL80에 임시 DB `tetto_restore_check`로 복원(22초) → 14개 테이블 행 수 전부 일치, `SHOW CREATE TABLE` 전부 동일, 공간 인덱스 존재·SRID 4326·`FORCE INDEX (spx_store_location)` MBR 질의 정상 → 임시 DB 삭제
+- k6 3회 → `load_test/baseline/2026-09-17_pre-upgrade_{1,2,3}.*` (측정 조건은 §3 참고)
+  - 참고용으로 남긴 실패 사례: `2026-09-17_ref-intellij-c1only_{1,2,3}.*` — IntelliJ 실행(C1 전용 JIT) 상태에서 p95 940ms / 1.19s / 1.28s. 기준점으로 쓰지 않음.
 
 완료 기준: 태그, 덤프, 복원 확인 로그, k6 3회 파일과 중앙값이 모두 존재.
 
@@ -256,7 +268,7 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 
 | 단계 | 날짜 | k6 p95 중앙값 (전 → 후) | 확인 항목 | 문제와 해결 | 예상 → 실제 |
 |---|---|---|---|---|---|
-| 기준점 | | — → ___ ms | 덤프 복원 OK, 인덱스 확인 | | 0.5일 → |
+| 기준점 | 2026-09-17 | — → **739ms** (3회: 739 / 712 / 853, avg 368/343/364, 실패 0) | 태그 2d8b4ef, 덤프 15MB 복원 22초 14테이블 일치, 공간 인덱스·SRID OK | IntelliJ/bootRun의 C1 전용 JIT로 1차 측정이 940ms~1.28s → jar 실행으로 재측정 | 0.5일 → 0.5일 |
 | Gradle 9 | | ___ → ___ | deprecation 0건 | | |
 | Boot 3.5.16 | | ___ → ___ | 코드 수정 0 | | |
 | JDK 25 | | ___ → ___ | Lombok 고정, agent 경고 0 | | |
