@@ -10,7 +10,7 @@ description = 'Demo project for Spring Boot'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(23)
+		languageVersion = JavaLanguageVersion.of(25)   // LTS. Gradle이 ~/.jdks 등에서 설치된 JDK 25를 자동 감지
 	}
 }
 
@@ -18,6 +18,8 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	// Mockito를 -javaagent로 명시 로딩하기 위한 설정 (JDK 21+ 동적 에이전트 경고 제거)
+	mockitoAgent
 }
 
 repositories {
@@ -33,14 +35,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
+	// Lombok은 javac 내부 API를 쓰므로 JDK 메이저마다 지원 버전을 직접 고정 (JDK 25: 1.18.40+)
+	compileOnly 'org.projectlombok:lombok:1.18.46'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	// Flyway: 스키마 마이그레이션 (버전은 Boot BOM이 관리, 3.5.5 기준 11.7.2)
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-mysql'
-	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok:1.18.46'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	mockitoAgent('org.mockito:mockito-core') { transitive = false }
     runtimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -53,4 +57,7 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// Mockito 인라인 목 에이전트를 기동 시 명시 로딩. 없으면 JDK 21+에서
+	// "dynamically loaded agent" 경고가 나고, 향후 JDK는 기본적으로 막을 예정.
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
