@@ -271,7 +271,7 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 | 기준점 | 2026-09-17 | — → **739ms** (3회: 739 / 712 / 853, avg 368/343/364, 실패 0) | 태그 2d8b4ef, 덤프 15MB 복원 22초 14테이블 일치, 공간 인덱스·SRID OK | IntelliJ/bootRun의 C1 전용 JIT로 1차 측정이 940ms~1.28s → jar 실행으로 재측정 | 0.5일 → 0.5일 |
 | Gradle 9.7.1 | 2026-09-17 | 739 → **693ms** (3회: 1,170 / 693 / 648, avg 560/331/320, 실패 0) | 8.14.3 config-time deprecation 0건, 9.7.1 build+test 통과(10 tests), deprecation 0건, wrapper 파일 1개만 변경 | 1회차 1.17s는 기동 직후 첫 회차(avg 560ms)로 JIT 미완 추정, 2~3회차는 기준점보다 빠름. 세션에서 띄운 Gradle 데몬을 사용자 터미널이 재사용해 첫 빌드 실패 → `--stop` 후 재실행 | 0.5~1일 → 0.5일 |
 | Boot 3.5.16 | 2026-09-17 | 693 → **679ms** (3회: 709 / 679 / 647, avg 363/337/315, 실패 0) | 플러그인 버전 한 줄 변경, 코드 수정 0, build+test 통과(10 tests), deprecation 0건. BOM: Framework 6.2.19, Security 6.5.11, Hibernate 6.6.53, ByteBuddy 1.17.8, Lombok 1.18.46, Connector/J 9.7.0, Tomcat 10.1.55, Flyway 11.7.2(동일) | 없음 | 0.5일 → 0.25일 |
-| JDK 25 | | ___ → ___ | Lombok 고정, agent 경고 0 | | |
+| JDK 25 (corretto-25.0.4.1) | 2026-09-17 | 679 → **807ms** (3회: 807 / 737 / 851, avg 394/375/372, 실패 0) — 판정 ≤850 통과, 단 4단계보다 19% 느림 | toolchain 25, Lombok 1.18.46 고정, Mockito -javaagent 명시(동적 로딩 경고 0), 테스트 Java 25.0.4.1 실행, class major 69, build+test 통과(10 tests), JAVA_HOME·IntelliJ SDK 25로 통일 | 첫 측정(재부팅 직후, `ref-stage5-after-reboot`)은 913/629/1,280ms로 편차 극심 → 재측정. 새 경고: Lombok 1.18.46의 `sun.misc.Unsafe::objectFieldOffset` (JDK 25 JEP 498 경고, 1.18.48에도 미수정, 빌드 영향 없음). 807ms가 JDK 원인인지 장비 상태인지 미확정 → 6단계 측정으로 재확인 | 1일 → 0.5일 |
 | MySQL 8.4 | | ___ → ___ | 체커 통과, EXPLAIN 동일, 인증 OK | | |
 
 ---
