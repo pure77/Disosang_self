@@ -55,6 +55,11 @@ dependencies {
 	implementation 'com.opencsv:opencsv:5.7.1'
 }
 
+// deprecated API 사용을 컴파일 시 전부 드러낸다. 메이저 업그레이드(Boot 4.1) 전에 제거 대상을 찾기 위해 켬.
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += ['-Xlint:deprecation']
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 	// Mockito 인라인 목 에이전트를 기동 시 명시 로딩. 없으면 JDK 21+에서
