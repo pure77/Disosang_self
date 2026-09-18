@@ -4,13 +4,15 @@ spring:
     name: disosang
   profiles:
     active: dev  # 기본 실행 프로필
+  # Boot 4: server.error.* → spring.web.error.* 로 이동 (properties-migrator가 타입 불일치로 자동 매핑 못 함)
+  web:
+    error:
+      include-message: always
+      include-stacktrace: always
   # hibernate.dialect는 명시하지 않는다. Hibernate 6은 접속한 DB에서 자동 감지하며,
   # 명시하면 HHH90000025 deprecation 경고가 난다. (test 프로필의 H2도 자동 감지)
 server:
   port: 8080
-  error:
-    include-message: always
-    include-stacktrace: always
 
 ---
 
