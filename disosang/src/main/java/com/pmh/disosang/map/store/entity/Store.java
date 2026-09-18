@@ -85,16 +85,23 @@ public class Store {
     @Column(name = "store_type_search", insertable = false, updatable = false)
     private String storeTypeSearch;
 
+    /*
+     * @Builder.Default: @Builder는 필드 초기값을 무시하므로, 이게 없으면 빌더로 만든 Store는
+     * averageRating/reviewCount가 null이 되어 updateRating()에서 NPE가 난다.
+     */
+    @Builder.Default
     @Column(name = "average_rating")
     private Double averageRating = 0.0;
 
+    @Builder.Default
     @Column(name = "review_count")
-    private Integer reviewCount =0;
+    private Integer reviewCount = 0;
 
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
     // Store(1)이 Review(N)를 가짐
+    @Builder.Default
     @OneToMany(mappedBy = "store", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
 
