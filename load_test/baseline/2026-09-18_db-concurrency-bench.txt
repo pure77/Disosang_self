@@ -1,0 +1,11 @@
+# DB 동시성 벤치 (2026-09-18) — 같은 SQL, 10 클라이언트 x 20회, mysql.exe 클라이언트
+# q4 = 키워드 검색 본 쿼리('카페', 1km 박스), q5 = 오타 fallback 후보 150개 쿼리
+# 결과 행은 세 인스턴스 모두 md5 동일
+
+instance                  q4 total   q4/round   q5 total   q5/round
+8.0.36 Windows service     3225 ms    161 ms     2767 ms    138 ms
+8.0.36 Docker (temp)       1335 ms     66 ms     1295 ms     64 ms
+8.4.11 Docker (compose)    1124 ms     56 ms     1189 ms     59 ms
+
+결론: Windows 서비스 → Linux 컨테이너가 2.4배, 8.0.36 → 8.4.11이 추가 10~15%.
+k6 p95 807ms → 54ms(13배)는 앱 커넥션 풀 10개가 DB 대기에서 풀려 포화 경계를 넘은 결과.

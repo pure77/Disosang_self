@@ -272,7 +272,7 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 | Gradle 9.7.1 | 2026-09-17 | 739 → **693ms** (3회: 1,170 / 693 / 648, avg 560/331/320, 실패 0) | 8.14.3 config-time deprecation 0건, 9.7.1 build+test 통과(10 tests), deprecation 0건, wrapper 파일 1개만 변경 | 1회차 1.17s는 기동 직후 첫 회차(avg 560ms)로 JIT 미완 추정, 2~3회차는 기준점보다 빠름. 세션에서 띄운 Gradle 데몬을 사용자 터미널이 재사용해 첫 빌드 실패 → `--stop` 후 재실행 | 0.5~1일 → 0.5일 |
 | Boot 3.5.16 | 2026-09-17 | 693 → **679ms** (3회: 709 / 679 / 647, avg 363/337/315, 실패 0) | 플러그인 버전 한 줄 변경, 코드 수정 0, build+test 통과(10 tests), deprecation 0건. BOM: Framework 6.2.19, Security 6.5.11, Hibernate 6.6.53, ByteBuddy 1.17.8, Lombok 1.18.46, Connector/J 9.7.0, Tomcat 10.1.55, Flyway 11.7.2(동일) | 없음 | 0.5일 → 0.25일 |
 | JDK 25 (corretto-25.0.4.1) | 2026-09-17 | 679 → **807ms** (3회: 807 / 737 / 851, avg 394/375/372, 실패 0) — 판정 ≤850 통과, 단 4단계보다 19% 느림 | toolchain 25, Lombok 1.18.46 고정, Mockito -javaagent 명시(동적 로딩 경고 0), 테스트 Java 25.0.4.1 실행, class major 69, build+test 통과(10 tests), JAVA_HOME·IntelliJ SDK 25로 통일 | 첫 측정(재부팅 직후, `ref-stage5-after-reboot`)은 913/629/1,280ms로 편차 극심 → 재측정. 새 경고: Lombok 1.18.46의 `sun.misc.Unsafe::objectFieldOffset` (JDK 25 JEP 498 경고, 1.18.48에도 미수정, 빌드 영향 없음). 807ms가 JDK 원인인지 장비 상태인지 미확정 → 6단계 측정으로 재확인 | 1일 → 0.5일 |
-| MySQL 8.4 | | ___ → ___ | 체커 통과, EXPLAIN 동일, 인증 OK | | |
+| MySQL 8.4.11 (Docker, 3307) | 2026-09-18 | 807 → **54ms** (3회: 94 / 54 / 53, avg 38/25/25, 73 req/s = k6 상한, 실패 0) | Flyway가 빈 8.4에 V1 실제 실행(722ms), 8개 테이블 DDL 8.0과 동일, 데이터 전용 덤프 11초 적재·행 수 일치, SRID·생성 컬럼·공간 인덱스 OK, EXPLAIN 5개 중 4개 동일(1개는 토큰 조회 인덱스가 PRIMARY→idx_store_search_token_lookup, 동등), 인증 caching_sha2_password로 Connector/J 9.7 접속 OK | **13배 개선의 정체**: 같은 8.0.36을 Docker로 띄워 10클라이언트 벤치 → Windows 서비스 161ms/round, Docker 8.0.36 66ms, Docker 8.4.11 56ms. 즉 대부분은 Windows MySQL 서비스→Linux 컨테이너 효과, 8.4 자체는 +10~15%. 기존 기준점(739ms)과 README 수치는 전부 Windows 서비스 위에서 잰 것. 업그레이드 체커는 논리 적재 방식이라 생략 | 1일 → 0.5일 |
 
 ---
 
@@ -297,7 +297,8 @@ Boot 3.5 OSS 지원 종료일은 https://spring.io/projects/spring-boot#support 
 2. **오타 fallback 비용**: 지도 안 후보 150개를 거리순 정렬(`ST_Distance_Sphere` ORDER BY, 인덱스 없음) + Java 레벤슈타인. 조건을 좁히거나(예: 토큰 후보가 0일 때만) 후보 수를 줄일 여지.
 3. **README 수치 정정**: 3차 최적화 수치 옆에 측정 조건(실행 방식, 날짜, 커밋)을 적고, 현재 코드 기준 수치로 갱신. 필요하면 0d531b5를 jar로 띄워 434ms 재현 여부 확인.
 4. **k6 스크립트 개선**: 상태 코드만 확인하므로 빈 결과를 못 잡음. 결과 건수 체크 추가, 결과 경로 env로 지정.
-5. **측정 도구 주의**: Git Bash의 curl은 한글 인자를 cp949로 보내므로 UTF-8 퍼센트 인코딩을 직접 만들어야 함. (2단계 워밍업 100회는 이 문제로 실제 검색 경로를 덜 워밍업했음. k6 램프업 30초가 대신 워밍업 역할을 하므로 기준점에는 영향 없다고 판단.)
+5. **측정 도구 주의**: Git Bash의 curl은 한글 인자를 cp949로 보내므로 UTF-8 퍼센트 인코딩을 직접 만들어야 함.
+6. **DB 플랫폼이 수치를 지배함 (2026-09-18 발견)**: 기준점 739ms부터 5단계 807ms까지 전부 Windows MySQL 8.0 서비스 위에서 잰 값. 같은 8.0.36을 Docker(Linux)로 띄우면 동시 10접속 기준 2.4배 빠르고, 그 위에서 k6 p95는 54ms. README 3차 수치(712ms)는 "Windows 서비스 기준"이라고 명시하거나, 컨테이너 기준으로 갱신해야 한다. 이후 모든 성능 수치는 Docker MySQL 8.4 기준으로 통일한다. 5단계의 807ms(JDK 25 회귀 의심)도 DB 병목 상태에서의 노이즈로 판단, 추가 조사 불필요. (2단계 워밍업 100회는 이 문제로 실제 검색 경로를 덜 워밍업했음. k6 램프업 30초가 대신 워밍업 역할을 하므로 기준점에는 영향 없다고 판단.)
 
 ---
 

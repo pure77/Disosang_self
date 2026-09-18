@@ -1,0 +1,41 @@
+# 로컬 개발용 MySQL 8.4 (LTS) 컨테이너
+#
+# 용도
+# - LTS 업그레이드 6단계: 기존 MySQL80 Windows 서비스(3306)는 그대로 두고
+#   8.4를 3307에 side-by-side로 띄워 앱 접속만 바꿔서 검증한다.
+# - 배포 리허설: 빈 8.4에 앱을 붙이면 Flyway가 스키마를 만들고, 데이터는 덤프로 적재한다.
+#
+# 실행 (저장소 루트, PowerShell)
+#   $env:MYSQL_ROOT_PASSWORD = "<application-secret.yml의 password>"
+#   docker compose -f docker/mysql84/docker-compose.yml up -d
+#
+# 롤백: application-secret.yml의 포트를 3306으로 되돌리면 끝. 이 컨테이너는 내려도 되고 둬도 된다.
+#   docker compose -f docker/mysql84/docker-compose.yml down        # 컨테이너만 제거, 데이터 볼륨 유지
+#   docker compose -f docker/mysql84/docker-compose.yml down -v     # 데이터 볼륨까지 제거
+
+services:
+  mysql84:
+    image: mysql:8.4.11   # 2026-09-18 기준 8.4 최신 패치. 재현성을 위해 패치까지 고정
+    container_name: disosang-mysql84
+    restart: unless-stopped   # Docker Desktop이 뜨면 자동 시작. 직접 stop한 경우만 예외
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD 환경 변수를 설정하세요}
+      MYSQL_DATABASE: tetto_test
+      TZ: Asia/Seoul
+    # 8.4 기본값: 인증 플러그인 caching_sha2_password (mysql_native_password는 기본 비활성).
+    # Connector/J 9.x는 caching_sha2_password를 지원하므로 앱 쪽 변경 없음.
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql84-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mysql84-data:
