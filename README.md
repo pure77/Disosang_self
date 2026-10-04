@@ -55,7 +55,7 @@
 
 **Backend**  
 ![Java](https://img.shields.io/badge/Java%2025%20LTS-007396?style=flat-square&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot%203.5.16-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot%204.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![Spring Data JPA](https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?style=flat-square&logo=spring&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle%209.7-02303A?style=flat-square&logo=gradle&logoColor=white)
@@ -172,8 +172,10 @@ java -jar build\libs\disosang-0.0.1-SNAPSHOT.jar
 | 4 | Spring Boot 3.5.5 → **3.5.16** | 코드 수정 0, 테스트 통과 | 679ms | #9 |
 | 5 | Java 23 → **25 LTS** (Corretto), Lombok 고정, Mockito `-javaagent` | 클래스 버전 69, 동적 에이전트 경고 0 | 807ms | #10 |
 | 6 | MySQL 8.0 → **8.4 LTS**, Docker side-by-side | 빈 8.4에 Flyway V1 실행, 데이터 적재 후 행 수·SRID·EXPLAIN 비교 | **54ms** (Docker MySQL 8.4) | #11 |
+| 7 | Spring Boot 3.5.16 → **4.1.1** (Framework 7, Security 7, Hibernate 7, Jackson 3) | Java 코드 수정 0, 스타터·설정 키 5개 변경, 응답 JSON 동일 | 57ms | #14, #15 |
 
 - 6단계의 13배 개선은 8.4보다 **Windows 서비스 → Linux 컨테이너** 효과가 대부분입니다 (같은 8.0.36 기준 2.4배). 풀 크기를 10 → 20으로 늘려도 Windows에서는 변화가 없어(776ms) DB 처리 용량이 병목이었음을 확인했습니다.
+- Boot 3.5의 OSS 지원이 2026-06-30에 끝나 4.1로 전환했습니다. 사전 조사에서 deprecated API 사용 0건, Jackson 직접 import 0건을 확인해 코드 변경 없이 넘어갔습니다.
 - 조사 중 발견한 사실: 3차 최적화의 이전 수치 434ms는 오타 보정이 빠진 상태의 측정값이라 정정했습니다.
 
 ---
